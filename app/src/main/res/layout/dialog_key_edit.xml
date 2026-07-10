@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Name -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Key Name / Label">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Algorithm -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Algorithm"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_algorithm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- Custom ALGID entry — only visible when "Other" is selected -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_other_alg_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hint="Algorithm ID (hex, e.g. 01)"
+            android:visibility="gone">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_other_alg_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textNoSuggestions"
+                android:fontFamily="monospace"
+                android:maxLength="4" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Keyset ID + Active Keyset checkbox -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_keyset_id"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Keyset ID (1–255)">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_keyset_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:text="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <CheckBox
+                android:id="@+id/cb_active_keyset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Active Keyset"
+                android:checked="true" />
+
+        </LinearLayout>
+
+        <!-- Key ID -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_key_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Key ID (0–65535)">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_key_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- SLN -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_sln"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="SLN / CKR (0–65535)">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_sln"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Key hex -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_key_hex"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Key (hex)">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_key_hex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textNoSuggestions"
+                android:fontFamily="monospace" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btn_generate_key"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Generate Random Key"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <!-- Key type — auto-detected from Key ID range -->
+        <TextView
+            android:id="@+id/tv_key_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Key Type: TEK"
+            android:alpha="0.7"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+</ScrollView>

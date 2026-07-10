@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_connect"
+        android:icon="@drawable/ic_nav_connect"
+        android:title="@string/tab_connect" />
+<item
+        android:id="@+id/nav_keyload"
+        android:icon="@drawable/ic_nav_keyload"
+        android:title="@string/tab_keyload" />
+    <item
+        android:id="@+id/nav_container"
+        android:icon="@drawable/ic_nav_container"
+        android:title="@string/tab_container" />
+    <item
+        android:id="@+id/nav_radio_keys"
+        android:icon="@drawable/ic_nav_radio_keys"
+        android:title="@string/tab_radio_keys" />
+</menu>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KFDDroid</string>
+    <string name="tab_connect">Connect</string>
+    <string name="tab_device_info">Device Info</string>
+    <string name="tab_keyload">Keyload</string>
+    <string name="tab_container">Container</string>
+    <string name="tab_radio_keys">Radio Keys</string>
+
+    <string name="container_none_open">No container open</string>
+    <string name="btn_new_container">New</string>
+    <string name="btn_open_container">Open</string>
+    <string name="btn_save_container">Save</string>
+    <string name="btn_save_as_container">Save As</string>
+    <string name="btn_load_to_radio">Load to Radio</string>
+    <string name="btn_add_key_fab">Add Key</string>
+
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="btn_read_info">Read Device Info</string>
+    <string name="btn_keyload">Load Key</string>
+    <string name="btn_add_key">Add Key</string>
+    <string name="btn_clear_keys">Clear</string>
+    <string name="btn_read_key_info">Read Key Info</string>
+    <string name="btn_erase_key">Erase Key</string>
+    <string name="btn_erase_all_keys">Erase All Keys</string>
+
+    <string name="label_status">Status</string>
+    <string name="label_no_device">No USB device connected</string>
+    <string name="label_connecting">Connecting…</string>
+    <string name="label_connected">Connected</string>
+    <string name="label_disconnected">Disconnected</string>
+    <string name="label_dli_not_connected">DLI: Not Connected</string>
+    <string name="label_dli_failed">DLI: Connection Failed</string>
+    <string name="label_dli_ready">DLI: Ready</string>
+
+    <string name="mode_kfd_adapter">KFD Adapter</string>
+    <string name="mode_dli">DLI over IP</string>
+    <string name="hint_dli_host">IP address or hostname</string>
+    <string name="hint_dli_port">UDP port (default 49644)</string>
+    <string name="btn_dli_configure">Configure</string>
+    <string name="btn_dli_test">Test</string>
+    <string name="dli_motorola_label">Motorola variant (MFID 0x90)</string>
+    <string name="dli_config_hint">Find the &#8220;Bluetooth PAN Network Base Address&#8221; in the Radio Wide page of your radio&#8217;s CPS to determine the correct IP address.</string>
+
+    <string name="label_ap_version">AP Version</string>
+    <string name="label_fw_version">FW Version</string>
+    <string name="label_unique_id">Unique ID</string>
+    <string name="label_model_id">Model ID</string>
+    <string name="label_hw_revision">HW Revision</string>
+    <string name="label_serial_number">Serial Number</string>
+
+    <string name="hint_algorithm">Algorithm</string>
+    <string name="hint_keyset_id">Keyset ID (1–255)</string>
+    <string name="hint_key_id">Key ID (0–65535)</string>
+    <string name="hint_sln">SLN/CKR (0–65535)</string>
+    <string name="hint_key_hex">Key (hex)</string>
+
+    <string name="btn_mr_emulator">MR Emulator</string>
+
+    <string name="perm_usb_prompt">KFDDroid needs permission to communicate with the USB device.</string>
+    <string name="error_no_serial_device">No compatible USB serial device found.</string>
+    <string name="error_usb_permission_denied">USB permission denied.</string>
+    <string name="error_open_failed">Failed to open serial port.</string>
+</resources>
