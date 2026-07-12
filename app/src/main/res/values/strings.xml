@@ -35,7 +35,7 @@
     <string name="label_dli_ready">DLI: Ready</string>
 
     <string name="mode_kfd_adapter">KFD Adapter</string>
-    <string name="mode_dli">DLI over IP</string>
+    <string name="mode_dli">DLI</string>
     <string name="hint_dli_host">IP address or hostname</string>
     <string name="hint_dli_port">UDP port (default 49644)</string>
     <string name="btn_dli_configure">Configure</string>

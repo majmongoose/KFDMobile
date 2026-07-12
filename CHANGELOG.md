@@ -7,6 +7,25 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.5.2] — 2026-07-12
+
+**Important:** This release changes the app's internal identity. You must uninstall any prior version before installing 0.5.2 — Android treats it as a different app.
+
+### New
+- DES key parity is now checked when you enter a DES-OFB or DES-XL key. Randomly generated DES keys have their parity fixed automatically so they pass validation.
+- The key field on the Keyload screen and the container Add/Edit Key screen is now capped at the number of hex characters required by the selected algorithm — no more accidentally typing past the end.
+- The DLI Configuration dialog now scrolls when the on-screen keyboard is covering part of it, and tapping the keyboard's "Done" key saves the configuration.
+- Generate Key now asks before overwriting a key you've already entered.
+- If you plug in a radio the app can't work with, you now get a clear "Unsupported radio" popup instead of the app hanging trying to talk to it.
+
+### Fixed
+- The Load button on the Keyload screen now enables the moment you finish typing a valid key — no need to tap another field first to make it wake up.
+- The red "invalid key" indicator no longer nags you while you're still typing a short-but-valid-looking key. It only appears once the key is the right length (or too long), or when you tap away from the field.
+- The DLI settings you had configured before plugging in a USB radio are preserved and automatically restored when the USB radio is unplugged.
+- The DLI mode button now reads simply "DLI" instead of "DLI over IP".
+
+---
+
 ## [0.5.1] — 2026-07-12
 
 ### New

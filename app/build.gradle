@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.kfdtool.android'
+    namespace 'com.sentinelcomms.kfddroid'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.kfdtool.android"
+        applicationId "com.sentinelcomms.kfddroid"
         minSdk 26
         targetSdk 34
-        versionCode 15
-        versionName "0.5.1"
+        versionCode 16
+        versionName "0.5.2"
     }
 
     buildTypes {
