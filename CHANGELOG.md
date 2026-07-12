@@ -7,6 +7,14 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.5.1] — 2026-07-12
+
+### New
+- **APX mobile control heads are now recognized over USB** — plug in a control head the same way you would a portable radio and the app connects.
+- **Automatic recognition of future APX models** — instead of matching a fixed list of specific radios, the app now identifies any Motorola APX-family USB device by its manufacturer signature. When new models are released they should work without needing an app update.
+
+---
+
 ## [0.5.0] — 2026-07-12
 
 ### New

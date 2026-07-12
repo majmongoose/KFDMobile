@@ -23,8 +23,11 @@
     <!-- Prolific PL2303 -->
     <usb-device vendor-id="1659" />
 
-    <!-- Motorola APX Series Radio (RNDIS DLI) — VID 0x0CAD.
-         Known PIDs so far: 0x1051 (4177), 0x1052 (4178). Add more as testers report them. -->
-    <usb-device vendor-id="3245" product-id="4177" />
-    <usb-device vendor-id="3245" product-id="4178" />
+    <!-- Motorola APX Series Radio / Control Head (RNDIS DLI) — VID 0x0CAD (3245).
+         Match by Communications device class (2) so any current or future APX model
+         is auto-recognized without a device-filter update. Confirmed PIDs so far:
+           0x101B (mobile control head), 0x1051 (portable radio), 0x1052 (portable radio).
+         Non-RNDIS Motorola devices matching this filter still fail cleanly at open time
+         since our RNDIS manager validates the interface layout before proceeding. -->
+    <usb-device vendor-id="3245" class="2" />
 </resources>
