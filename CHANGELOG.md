@@ -7,6 +7,19 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.5.0] — 2026-07-12
+
+### New
+- **Radio-over-USB support** — plug an APX radio directly into the phone's USB port and the app now talks to it as if it were on Bluetooth. No cradle, no PC in the middle. The app finds the radio automatically, gets an address, and switches itself into DLI mode when it's ready.
+- **Radio compatibility check** — when you test the DLI connection, the app now asks the radio what model it is. If the radio can't do software keyloading (AN/Mackinaw/OMAP), you get a clear pop-up telling you to use a KFD adapter instead, and software keyload is disabled to prevent a confusing failure later. Compatible (Freon) radios are noted in the log and everything works normally.
+- **Helpful note in the DLI configuration** — reminds you that internet access must be enabled on the Bluetooth connection to the radio, and that some phones need Airplane Mode with Bluetooth on for routing to work.
+
+### Fixed
+- **Container tab crash on Samsung Fold and other wider-screen phones** — the wider-screen version of the container screen was missing pieces, which crashed the app the moment you tapped the tab. Fixed.
+- **Keyload buttons now disable when the USB radio is unplugged** — previously the app would leave Load / Erase / View Key Info buttons enabled after a disconnect, and taps would just fail. They now grey out immediately.
+
+---
+
 ## [0.3.1] — 2026-05-29
 
 ### Changed

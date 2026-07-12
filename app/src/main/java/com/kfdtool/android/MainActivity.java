@@ -55,7 +55,10 @@ import com.kfdtool.android.protocol.AdapterProtocol;
 import com.kfdtool.android.protocol.KfdFrameProtocol;
 import com.kfdtool.android.protocol.UdpProtocol;
 import com.kfdtool.android.p25.MrEmulatorProtocol;
+import com.kfdtool.android.protocol.UdpTransport;
 import com.kfdtool.android.ui.AboutDialogFragment;
+import com.kfdtool.android.usb.rndis.UsbRndisManager;
+import com.kfdtool.android.usb.rndis.UsbRndisUdpTransport;
 import com.kfdtool.android.ui.SettingsDialogFragment;
 import com.kfdtool.android.ui.ConnectFragment;
 import com.kfdtool.android.ui.ContainerFragment;
@@ -101,10 +104,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private UsbSerialManager usbManager;
+    private UsbRndisManager  usbRndisManager;
+    private volatile UsbRndisUdpTransport usbRndisTransport;    // non-null once DHCP has run
     private volatile KfdFrameProtocol frameProtocol;
     private volatile AdapterProtocol  adapterProtocol;   // non-null = TWI connected
     private volatile DliConfig        dliConfig;         // non-null = DLI active
     private volatile Boolean          dliVerified;       // null=untested, false=failed, true=ready
+    /** True if the connected DLI radio replied to the model-check as an incompatible platform. */
+    private volatile boolean          dliRadioIncompatible;
 
     private final ExecutorService      executor           = Executors.newSingleThreadExecutor();
     private       ScheduledExecutorService heartbeatScheduler;
@@ -153,6 +160,15 @@ public class MainActivity extends AppCompatActivity {
         keyloadFragment   = new KeyloadFragment();
         containerFragment = new ContainerFragment();
         radioKeysFragment = new RadioKeysFragment();
+
+        usbRndisManager = new UsbRndisManager(this);
+        usbRndisManager.setListener(rndisListener);
+        // If an APX radio is already plugged in at launch, try to attach.
+        android.hardware.usb.UsbDevice preAttached = usbRndisManager.findApxRadio();
+        if (preAttached != null) {
+            Log.i(TAG, "APX radio already attached at launch: " + preAttached.getProductName());
+            usbRndisManager.requestPermissionAndOpen(preAttached);
+        }
 
         if (savedInstanceState == null) showFragment(connectFragment);
 
@@ -235,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
         executor.shutdownNow();
         if (frameProtocol != null) frameProtocol.stopReceiving();
         usbManager.destroy();
+        if (usbRndisManager != null) usbRndisManager.destroy();
     }
 
     // ── USB / DLI connection public API ───────────────────────────────────────
@@ -347,8 +364,11 @@ public class MainActivity extends AppCompatActivity {
 
     /** Activate DLI mode with the given host/port/variant. */
     public void setDliConfig(String host, int port, boolean motVariant) {
-        this.dliConfig    = new DliConfig(host, port, motVariant);
-        this.dliVerified  = null;
+        this.dliConfig            = new DliConfig(host, port, motVariant);
+        this.dliVerified          = null;
+        this.dliRadioIncompatible = false;
+        UsbRndisUdpTransport t = usbRndisTransport;
+        if (t != null) t.setTargetPort(port);
         connectFragment.refreshState();
     }
 
@@ -358,35 +378,40 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         executor.execute(() -> {
-            if (!isBluetoothEnabled()) {
-                dliVerified = false;
-                runOnUiThread(() -> {
-                    connectFragment.refreshState();
-                    callback.onResult(false,
-                            "Bluetooth is not enabled — turn on Bluetooth and connect your radio.", null);
-                });
-                return;
+            boolean viaUsb = usbRndisTransport != null;
+            if (!viaUsb) {
+                if (!isBluetoothEnabled()) {
+                    dliVerified = false;
+                    runOnUiThread(() -> {
+                        connectFragment.refreshState();
+                        callback.onResult(false,
+                                "Bluetooth is not enabled — turn on Bluetooth and connect your radio.", null);
+                    });
+                    return;
+                }
+                if (!isHostRoutable(dliConfig.host)) {
+                    dliVerified = false;
+                    runOnUiThread(() -> {
+                        connectFragment.refreshState();
+                        callback.onResult(false,
+                                "No network route to " + dliConfig.host + " — check that your radio"
+                                + " is connected via Bluetooth and the IP matches your radio's programming.", null);
+                    });
+                    return;
+                }
             }
-            if (!isHostRoutable(dliConfig.host)) {
-                dliVerified = false;
-                runOnUiThread(() -> {
-                    connectFragment.refreshState();
-                    callback.onResult(false,
-                            "No network route to " + dliConfig.host + " — check that your radio"
-                            + " is connected via Bluetooth and the IP matches your radio's programming.", null);
-                });
-                return;
-            }
-            final String  host = dliConfig.host;
+            final String  host = viaUsb ? getUsbRadioIp() : dliConfig.host;
             final int     port = dliConfig.port;
             final boolean mot  = dliConfig.motVariant;
             runOnUiThread(() -> connectFragment.appendLog(
-                    "Connecting to " + host + ":" + port + (mot ? " (Motorola)" : " (Standard)") + "…"));
-            UdpProtocol udp = new UdpProtocol(host, port, DLI_TIMEOUT, this);
+                    "Connecting to " + host + ":" + port + (mot ? " (Motorola)" : " (Standard)")
+                    + (viaUsb ? " over USB…" : "…")));
+            UdpTransport udp = dliTransport(dliConfig);
             DataLinkIndependentProtocol proto = new DataLinkIndependentProtocol(udp, mot);
             try {
                 proto.initSession();
                 proto.endSession();
+                runModelCheck();
                 dliVerified = true;
                 runOnUiThread(() -> {
                     connectFragment.refreshState();
@@ -403,21 +428,141 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private static final int MODEL_CHECK_TCP_PORT = 8002;
+    private static final int MODEL_CHECK_TIMEOUT_MS = 10000;
+    private static final byte[] MODEL_CHECK_CMD = {0x00, 0x03, 0x00, 0x0F, 0x67};
+
+    /**
+     * Radio model diagnostic — TCP request to port 8002. Independent of the DLI
+     * KMM session; can be run after endSession. Dispatches by transport:
+     *   USB path → userspace one-shot TCP over RNDIS
+     *   BT PAN path → java.net.Socket bound to the BT network
+     */
+    private void runModelCheck() {
+        try {
+            byte[] rsp;
+            if (usbRndisTransport != null) {
+                rsp = usbRndisTransport.oneShotTcp(MODEL_CHECK_TCP_PORT,
+                        MODEL_CHECK_CMD, MODEL_CHECK_TIMEOUT_MS);
+            } else if (dliConfig != null) {
+                rsp = tcpRequestOverSocket(dliConfig.host, MODEL_CHECK_TCP_PORT,
+                        MODEL_CHECK_CMD, MODEL_CHECK_TIMEOUT_MS);
+            } else {
+                return;
+            }
+            classifyModelResponse(rsp);
+        } catch (Exception e) {
+            Log.w(TAG, "Model check failed", e);
+            runOnUiThread(() -> connectFragment.appendLog(
+                    "DLI: Model check failed: " + e.getMessage()));
+        }
+    }
+
+    private void classifyModelResponse(byte[] rsp) {
+        String hex = bytesToHex(rsp);
+        Log.i(TAG, "Model check response: " + hex);
+        if (rsp.length == 0) {
+            runOnUiThread(() -> connectFragment.appendLog(
+                    "DLI: Model check — empty response."));
+            return;
+        }
+        byte last = rsp[rsp.length - 1];
+        if (last == 0x0A) {
+            dliRadioIncompatible = false;
+            runOnUiThread(() -> connectFragment.appendLog("DLI: Freon radio detected."));
+        } else if (last == 0x07) {
+            dliRadioIncompatible = true;
+            runOnUiThread(() -> {
+                connectFragment.appendLog(
+                        "DLI: Incompatible radio (AN/Mackinaw/OMAP) — keyload blocked.");
+                connectFragment.showIncompatibleRadioDialog();
+            });
+        } else {
+            dliRadioIncompatible = false;
+            runOnUiThread(() -> connectFragment.appendLog(
+                    "DLI: Unknown radio model — response: " + hex));
+        }
+    }
+
+    /**
+     * Blocking TCP round-trip using the OS socket stack, bound to whichever
+     * Network can route to {@code host} (Bluetooth PAN, typically).
+     */
+    private byte[] tcpRequestOverSocket(String host, int port, byte[] payload, int timeoutMs)
+            throws IOException {
+        InetAddress target = InetAddress.getByName(host);
+        java.net.Socket sock = new java.net.Socket();
+        try {
+            bindSocketToRoute(sock, target);
+            sock.connect(new java.net.InetSocketAddress(target, port), timeoutMs);
+            sock.setSoTimeout(timeoutMs);
+            sock.getOutputStream().write(payload);
+            sock.getOutputStream().flush();
+            java.io.InputStream in = sock.getInputStream();
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[256];
+            long deadline = System.currentTimeMillis() + timeoutMs;
+            while (System.currentTimeMillis() < deadline) {
+                int n;
+                try { n = in.read(buf); }
+                catch (java.net.SocketTimeoutException te) { break; }
+                if (n < 0) break;
+                out.write(buf, 0, n);
+                // The radio's model reply is a single short segment; stop as soon as we have it.
+                if (out.size() >= 4) break;
+            }
+            return out.toByteArray();
+        } finally {
+            try { sock.close(); } catch (IOException ignored) {}
+        }
+    }
+
+    /** Bind {@code sock} to the Network whose link addresses cover {@code target}. */
+    private void bindSocketToRoute(java.net.Socket sock, InetAddress target) {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            if (cm == null) return;
+            byte[] targetBytes = target.getAddress();
+            for (Network net : cm.getAllNetworks()) {
+                LinkProperties lp = cm.getLinkProperties(net);
+                if (lp == null) continue;
+                for (android.net.LinkAddress la : lp.getLinkAddresses()) {
+                    if (!(la.getAddress() instanceof java.net.Inet4Address)) continue;
+                    if (sameSubnet(targetBytes, la.getAddress().getAddress(), la.getPrefixLength())) {
+                        net.bindSocket(sock);
+                        return;
+                    }
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    private static boolean sameSubnet(byte[] a, byte[] b, int prefix) {
+        if (prefix <= 0 || prefix > 32) return false;
+        int mask = (prefix == 32) ? 0xFFFFFFFF : (0xFFFFFFFF << (32 - prefix));
+        int ai = ((a[0]&0xFF)<<24) | ((a[1]&0xFF)<<16) | ((a[2]&0xFF)<<8) | (a[3]&0xFF);
+        int bi = ((b[0]&0xFF)<<24) | ((b[1]&0xFF)<<16) | ((b[2]&0xFF)<<8) | (b[3]&0xFF);
+        return (ai & mask) == (bi & mask);
+    }
+
     /** Called on DLI tab switch: silently runs a test only if the configured IP is routable. */
     public void autoTestDli() {
         if (dliConfig == null) return;
         executor.execute(() -> {
-            if (!isHostRoutable(dliConfig.host)) return;
-            final String  host = dliConfig.host;
+            boolean viaUsb = usbRndisTransport != null;
+            if (!viaUsb && !isHostRoutable(dliConfig.host)) return;
+            final String  host = viaUsb ? getUsbRadioIp() : dliConfig.host;
             final int     port = dliConfig.port;
             final boolean mot  = dliConfig.motVariant;
             runOnUiThread(() -> connectFragment.appendLog(
-                    "Connecting to " + host + ":" + port + (mot ? " (Motorola)" : " (Standard)") + "…"));
-            UdpProtocol udp = new UdpProtocol(host, port, DLI_TIMEOUT, this);
+                    "Connecting to " + host + ":" + port + (mot ? " (Motorola)" : " (Standard)")
+                    + (viaUsb ? " over USB…" : "…")));
+            UdpTransport udp = dliTransport(dliConfig);
             DataLinkIndependentProtocol proto = new DataLinkIndependentProtocol(udp, mot);
             try {
                 proto.initSession();
                 proto.endSession();
+                runModelCheck();
                 dliVerified = true;
                 runOnUiThread(() -> {
                     connectFragment.appendLog("DLI: Connected.");
@@ -479,10 +624,13 @@ public class MainActivity extends AppCompatActivity {
 
     /** Deactivate DLI mode (called when user switches back to TWI). */
     public void clearDli() {
-        this.dliConfig   = null;
-        this.dliVerified = null;
+        this.dliConfig            = null;
+        this.dliVerified          = null;
+        this.dliRadioIncompatible = false;
         connectFragment.refreshState();
     }
+
+    public boolean isDliRadioIncompatible() { return dliRadioIncompatible; }
 
     public boolean isUsbConnected()  { return usbManager.isOpen(); }
     public boolean isDliActive()     { return dliConfig != null; }
@@ -533,8 +681,7 @@ public class MainActivity extends AppCompatActivity {
     private ManualRekeyApplication buildRekeyApp() {
         DliConfig cfg = dliConfig;
         if (cfg != null) {
-            UdpProtocol udp = new UdpProtocol(cfg.host, cfg.port, DLI_TIMEOUT, this);
-            return new ManualRekeyApplication(udp, cfg.motVariant);
+            return new ManualRekeyApplication(dliTransport(cfg), cfg.motVariant);
         }
         AdapterProtocol ap = adapterProtocol;
         if (ap == null) throw new IllegalStateException("Not connected");
@@ -612,6 +759,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void performKeyload(List<CmdKeyItem> keyItems, KeyloadCallback callback) {
         if (!checkConnected(callback)) return;
+        if (dliConfig != null && dliRadioIncompatible) {
+            runOnUiThread(() -> callback.onResult(false,
+                    "Radio is not compatible with software keyloading (AN/Mackinaw/OMAP). "
+                    + "Use hardware keyloading over TWI.", null));
+            return;
+        }
         executor.execute(() -> {
             ManualRekeyApplication rekey = buildRekeyApp();
             StringBuilder userLog = new StringBuilder(), debugLog = new StringBuilder();
@@ -692,6 +845,93 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> callback.onResult(false, userLog.toString(), null, debugLog.toString()));
             }
         });
+    }
+
+    // ── USB RNDIS (APX radio) listener ────────────────────────────────────────
+
+    private final UsbRndisManager.Listener rndisListener = new UsbRndisManager.Listener() {
+        @Override public void onAttached(UsbDevice d) {
+            Log.i(TAG, "RNDIS attached: " + d.getProductName()
+                    + " VID=0x" + Integer.toHexString(d.getVendorId())
+                    + " PID=0x" + Integer.toHexString(d.getProductId()));
+            runOnUiThread(() -> {
+                Toast.makeText(MainActivity.this,
+                        "USB radio attached — starting DLI…", Toast.LENGTH_SHORT).show();
+                if (connectFragment != null)
+                    connectFragment.appendLog("USB radio attached: " + d.getProductName());
+            });
+            executor.execute(() -> {
+                try {
+                    int port = dliConfig != null ? dliConfig.port : 49644;
+                    UsbRndisUdpTransport t = new UsbRndisUdpTransport(
+                            usbRndisManager, port, DLI_TIMEOUT);
+                    t.bringUp();
+                    usbRndisTransport = t;
+                    Log.i(TAG, "USB DLI up (radio IP=" + t.getRadioIp() + ")");
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this,
+                                "USB DLI ready — radio at " + t.getRadioIp(),
+                                Toast.LENGTH_LONG).show();
+                        if (connectFragment != null) {
+                            connectFragment.appendLog("USB DLI ready — radio at " + t.getRadioIp());
+                            connectFragment.switchToDliMode();
+                            connectFragment.refreshState();
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.w(TAG, "USB RNDIS bring-up failed", e);
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this,
+                                "USB DLI failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        if (connectFragment != null) connectFragment.appendLog(
+                                "USB DLI bring-up failed: " + e.getMessage());
+                    });
+                }
+            });
+        }
+        @Override public void onDetached() {
+            usbRndisTransport = null;
+            // A DLI session over the now-gone USB link is no longer verified;
+            // clear so isConnected() reflects reality and keyload buttons disable.
+            dliVerified = null;
+            dliRadioIncompatible = false;
+            Log.i(TAG, "RNDIS detached");
+            runOnUiThread(() -> {
+                if (connectFragment   != null) {
+                    connectFragment.appendLog("USB radio detached.");
+                    connectFragment.refreshState();
+                }
+                if (keyloadFragment   != null) keyloadFragment.refreshButtons();
+                if (containerFragment != null) containerFragment.updateLoadButton();
+                if (radioKeysFragment != null) radioKeysFragment.refreshButtons();
+            });
+        }
+        @Override public void onError(String message) {
+            Log.w(TAG, "RNDIS error: " + message);
+            runOnUiThread(() -> {
+                if (connectFragment != null)
+                    connectFragment.appendLog("USB radio: " + message);
+            });
+        }
+    };
+
+    /** True if an APX radio has been brought up over USB and DHCP has completed. */
+    public boolean isUsbRndisReady() { return usbRndisTransport != null; }
+
+    /** IP the radio gave us via DHCP (for display only). */
+    public String getUsbRadioIp() {
+        UsbRndisUdpTransport t = usbRndisTransport;
+        return t == null ? null : t.getRadioIp();
+    }
+
+    /**
+     * Chooses the right DLI transport. Prefers USB when a radio is attached,
+     * otherwise falls back to a socket-based UdpProtocol using the configured host/port.
+     */
+    private UdpTransport dliTransport(DliConfig cfg) {
+        UsbRndisUdpTransport t = usbRndisTransport;
+        if (t != null) return t;
+        return new UdpProtocol(cfg.host, cfg.port, DLI_TIMEOUT, this);
     }
 
     // ── USB connection listener ───────────────────────────────────────────────
@@ -807,7 +1047,18 @@ public class MainActivity extends AppCompatActivity {
     private void handleUsbIntent(Intent intent) {
         if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-            if (device != null) usbManager.requestPermission();
+            if (device == null) {
+                Log.w(TAG, "USB_DEVICE_ATTACHED with no EXTRA_DEVICE");
+                return;
+            }
+            Log.i(TAG, "USB_DEVICE_ATTACHED VID=0x" + Integer.toHexString(device.getVendorId())
+                    + " PID=0x" + Integer.toHexString(device.getProductId())
+                    + " name=" + device.getProductName());
+            if (UsbRndisManager.isApxRadio(device)) {
+                usbRndisManager.requestPermissionAndOpen(device);
+            } else {
+                usbManager.requestPermission();
+            }
         }
     }
 

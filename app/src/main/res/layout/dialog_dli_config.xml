@@ -1,9 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp">
+
+    <!-- USB DLI banner — visible only when a USB APX radio is connected -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_usb_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#1976D2">
+
+        <TextView
+            android:id="@+id/tv_usb_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:text="USB radio connected — using USB. Host field ignored." />
+
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- CPS hint -->
     <TextView
@@ -15,6 +38,7 @@
         android:alpha="0.7" />
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_dli_host"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_dli_host">
@@ -49,11 +73,19 @@
         android:layout_marginTop="10dp"
         android:text="@string/dli_motorola_label" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="Internet access must be enabled on the Bluetooth connection to the radio. On some phones, you may need to enable Airplane Mode with Bluetooth still on for routing to work."
+        android:textSize="12sp"
+        android:alpha="0.7" />
+
     <Button
         android:id="@+id/btn_open_bt_settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="4dp"
         android:text="Open Bluetooth Settings"
         style="@style/Widget.MaterialComponents.Button.TextButton" />
 

@@ -43,7 +43,7 @@ import com.kfdtool.android.p25.kmm.RekeyAcknowledgment;
 import com.kfdtool.android.p25.kmm.ZeroizeCommand;
 import com.kfdtool.android.p25.kmm.ZeroizeResponse;
 import com.kfdtool.android.protocol.AdapterProtocol;
-import com.kfdtool.android.protocol.UdpProtocol;
+import com.kfdtool.android.protocol.UdpTransport;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,7 +85,7 @@ public class ManualRekeyApplication {
     }
 
     /** DLI constructor — communicates via UDP (Bluetooth PAN / USB RNDIS). */
-    public ManualRekeyApplication(UdpProtocol udp, boolean motVariant) {
+    public ManualRekeyApplication(UdpTransport udp, boolean motVariant) {
         this.deviceProtocol  = new DataLinkIndependentProtocol(udp, motVariant);
         this.withPreamble    = true;
         this.mfid            = motVariant

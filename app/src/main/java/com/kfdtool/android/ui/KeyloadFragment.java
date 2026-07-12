@@ -172,7 +172,7 @@ public class KeyloadFragment extends Fragment {
         refreshButtons();
     }
 
-    private void refreshButtons() {
+    public void refreshButtons() {
         if (binding == null) return;
         binding.btnKeyload.setEnabled(
                 ((MainActivity) requireActivity()).isConnected() && isFormComplete());

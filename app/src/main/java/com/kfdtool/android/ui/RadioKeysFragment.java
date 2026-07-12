@@ -286,7 +286,7 @@ public class RadioKeysFragment extends Fragment {
         refreshButtons();
     }
 
-    private void refreshButtons() {
+    public void refreshButtons() {
         if (binding == null) return;
         boolean connected = ((MainActivity) requireActivity()).isConnected();
         binding.btnViewKeyInfo.setEnabled(connected);

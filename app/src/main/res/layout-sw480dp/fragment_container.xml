@@ -76,6 +76,15 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Indeterminate progress bar — visible while a container file is loading -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progress_loading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:trackCornerRadius="0dp" />
+
     <!-- Key list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_keys"
@@ -84,6 +93,17 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="8dp" />
+
+    <!-- MR Emulator — only visible for new, empty containers -->
+    <Button
+        android:id="@+id/btn_mr_emulator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/btn_mr_emulator"
+        android:visibility="gone"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
     <!-- Bottom action bar -->
     <LinearLayout

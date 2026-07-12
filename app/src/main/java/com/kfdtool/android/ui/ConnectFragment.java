@@ -142,6 +142,17 @@ public class ConnectFragment extends Fragment {
         etPort.setText(String.valueOf(savedPort));
         cbMot.setChecked(savedMot);
 
+        MainActivity act = (MainActivity) requireActivity();
+        if (act.isUsbRndisReady()) {
+            View banner = dialogView.findViewById(R.id.card_usb_banner);
+            View hostField = dialogView.findViewById(R.id.til_dli_host);
+            android.widget.TextView bannerText = dialogView.findViewById(R.id.tv_usb_banner);
+            banner.setVisibility(View.VISIBLE);
+            hostField.setVisibility(View.GONE);
+            String ip = act.getUsbRadioIp();
+            if (ip != null) bannerText.setText("USB radio connected — using USB (" + ip + ").");
+        }
+
         dialogView.findViewById(R.id.btn_open_bt_settings).setOnClickListener(v ->
                 startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS)));
 
@@ -162,7 +173,7 @@ public class ConnectFragment extends Fragment {
                             ? etPort.getText().toString().trim() : "";
                     boolean motVariant = cbMot.isChecked();
 
-                    if (host.isEmpty()) {
+                    if (host.isEmpty() && !((MainActivity) requireActivity()).isUsbRndisReady()) {
                         Toast.makeText(requireContext(),
                                 "Enter an IP address or hostname", Toast.LENGTH_SHORT).show();
                         return;
@@ -263,6 +274,34 @@ public class ConnectFragment extends Fragment {
                 if (binding != null) binding.scrollLog.fullScroll(View.FOCUS_DOWN);
             });
         });
+    }
+
+    /**
+     * Modal shown when the DLI model check identifies an incompatible platform
+     * (AN/Mackinaw/OMAP). Software keyload is blocked until the user switches
+     * to TWI or connects a different radio.
+     */
+    public void showIncompatibleRadioDialog() {
+        if (!isAdded()) return;
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Incompatible Radio")
+                .setMessage("This radio (AN/Mackinaw/OMAP platform) does not support software "
+                        + "keyloading. Software keyload has been disabled for this connection.\n\n"
+                        + "You must use hardware keyloading over TWI (KFD adapter) to load keys "
+                        + "on this radio.")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    /**
+     * Force the mode toggle to DLI. Called when a USB APX radio is attached and
+     * brought up so the user doesn't have to manually switch modes.
+     * No-op if already in DLI mode.
+     */
+    public void switchToDliMode() {
+        if (binding == null) return;
+        if (binding.toggleMode.getCheckedButtonId() == R.id.btn_mode_dli) return;
+        binding.toggleMode.check(R.id.btn_mode_dli);
     }
 
     public void setDeviceName(String name) {

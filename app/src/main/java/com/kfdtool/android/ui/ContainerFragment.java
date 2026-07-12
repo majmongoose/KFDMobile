@@ -595,7 +595,7 @@ public class ContainerFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
-    private void updateLoadButton() {
+    public void updateLoadButton() {
         if (binding == null) return;
         boolean hasContainer = openContainer != null && !openContainer.keys.isEmpty();
         boolean connected    = ((MainActivity) requireActivity()).isConnected();

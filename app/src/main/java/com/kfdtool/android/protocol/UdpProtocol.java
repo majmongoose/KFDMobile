@@ -53,7 +53,7 @@ import java.util.Arrays;
  *
  * Mirrors UdpProtocol.cs from the .NET source.
  */
-public class UdpProtocol {
+public class UdpProtocol implements UdpTransport {
 
     private static final int RECV_BUFFER = 4096;
 
@@ -78,6 +78,7 @@ public class UdpProtocol {
      *
      * @throws IOException on socket error or receive timeout
      */
+    @Override
     public byte[] txRx(byte[] toRadio) throws IOException {
         InetAddress targetAddr = InetAddress.getByName(host);
         DatagramSocket socket  = new DatagramSocket();

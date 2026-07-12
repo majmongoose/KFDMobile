@@ -22,4 +22,9 @@
 
     <!-- Prolific PL2303 -->
     <usb-device vendor-id="1659" />
+
+    <!-- Motorola APX Series Radio (RNDIS DLI) — VID 0x0CAD.
+         Known PIDs so far: 0x1051 (4177), 0x1052 (4178). Add more as testers report them. -->
+    <usb-device vendor-id="3245" product-id="4177" />
+    <usb-device vendor-id="3245" product-id="4178" />
 </resources>
