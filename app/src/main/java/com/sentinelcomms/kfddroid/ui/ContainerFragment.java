@@ -129,6 +129,14 @@ public class ContainerFragment extends Fragment {
 
     // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
+    // Instance-state keys. Bundle is process-local RAM only; not persisted to disk.
+    private static final String STATE_CONTAINER      = "container";
+    private static final String STATE_URI            = "uri";
+    private static final String STATE_PASSWORD       = "password";
+    private static final String STATE_DIRTY          = "dirty";
+    private static final String STATE_SELECTED_IDS   = "selected_ids";
+    private static final String STATE_SELECTION_MODE = "selection_mode";
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle state) {
         binding = FragmentContainerBinding.inflate(inflater, container, false);
@@ -164,8 +172,36 @@ public class ContainerFragment extends Fragment {
         binding.btnLoadToRadio.setOnClickListener(v -> loadToRadio());
         binding.btnMrEmulator.setOnClickListener(v -> launchMrEmulator());
 
+        if (savedInstanceState != null) restoreState(savedInstanceState);
         ensureContainer();
         refreshUi();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle out) {
+        super.onSaveInstanceState(out);
+        // Save the open container, its URI, password, dirty flag, and selection state
+        // so rotation/aspect-ratio config changes don't drop the user's work.
+        if (openContainer != null) out.putParcelable(STATE_CONTAINER, openContainer);
+        if (openUri       != null) out.putParcelable(STATE_URI, openUri);
+        if (openPassword  != null) out.putString(STATE_PASSWORD, openPassword);
+        out.putBoolean(STATE_DIRTY, isDirty);
+        out.putBoolean(STATE_SELECTION_MODE, selectionMode);
+        int[] ids = new int[selectedKeyIds.size()];
+        int i = 0;
+        for (Integer id : selectedKeyIds) ids[i++] = id;
+        out.putIntArray(STATE_SELECTED_IDS, ids);
+    }
+
+    private void restoreState(@NonNull Bundle in) {
+        openContainer = in.getParcelable(STATE_CONTAINER);
+        openUri       = in.getParcelable(STATE_URI);
+        openPassword  = in.getString(STATE_PASSWORD);
+        isDirty       = in.getBoolean(STATE_DIRTY, false);
+        selectionMode = in.getBoolean(STATE_SELECTION_MODE, false);
+        selectedKeyIds.clear();
+        int[] ids = in.getIntArray(STATE_SELECTED_IDS);
+        if (ids != null) for (int id : ids) selectedKeyIds.add(id);
     }
 
     @Override
@@ -180,6 +216,11 @@ public class ContainerFragment extends Fragment {
         super.onDestroyView();
         if (settings != null) settings.getPrefs().unregisterOnSharedPreferenceChangeListener(settingsListener);
         binding = null;
+        // Drop plaintext key material references as early as possible on the outgoing
+        // fragment instance. State restore uses the parceled Bundle, not these fields.
+        openContainer = null;
+        openPassword  = null;
+        selectedKeyIds.clear();
     }
 
     // ─── Container operations ────────────────────────────────────────────────────

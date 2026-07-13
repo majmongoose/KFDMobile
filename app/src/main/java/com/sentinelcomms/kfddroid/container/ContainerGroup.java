@@ -27,12 +27,41 @@
  */
 package com.sentinelcomms.kfddroid.container;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /** Maps to KFDtool.Container.GroupItem. */
-public class ContainerGroup {
+public class ContainerGroup implements Parcelable {
     public int id;
     public String name = "";
     public List<Integer> keys = new ArrayList<>();
+
+    public ContainerGroup() {}
+
+    protected ContainerGroup(Parcel in) {
+        id   = in.readInt();
+        name = in.readString();
+        int n = in.readInt();
+        keys = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) keys.add(in.readInt());
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(name == null ? "" : name);
+        dest.writeInt(keys == null ? 0 : keys.size());
+        if (keys != null) for (Integer k : keys) dest.writeInt(k);
+    }
+
+    @Override
+    public int describeContents() { return 0; }
+
+    public static final Creator<ContainerGroup> CREATOR = new Creator<ContainerGroup>() {
+        @Override public ContainerGroup createFromParcel(Parcel in) { return new ContainerGroup(in); }
+        @Override public ContainerGroup[] newArray(int size) { return new ContainerGroup[size]; }
+    };
 }

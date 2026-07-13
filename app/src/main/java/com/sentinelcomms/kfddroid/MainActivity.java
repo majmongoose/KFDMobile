@@ -88,6 +88,13 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG          = "MainActivity";
+
+    // Fragment tags — used so config-change restores can reattach to the existing
+    // instances instead of losing state to freshly-constructed replacements.
+    private static final String TAG_CONNECT     = "connect";
+    private static final String TAG_KEYLOAD     = "keyload";
+    private static final String TAG_CONTAINER   = "container";
+    private static final String TAG_RADIO_KEYS  = "radio_keys";
     private static final String DEBUG_PREFIX = "  ";
     private static final int    DLI_TIMEOUT  = 5000; // ms
 
@@ -158,10 +165,19 @@ public class MainActivity extends AppCompatActivity {
         usbManager = new UsbSerialManager(this);
         usbManager.setListener(connectionListener);
 
-        connectFragment   = new ConnectFragment();
-        keyloadFragment   = new KeyloadFragment();
-        containerFragment = new ContainerFragment();
-        radioKeysFragment = new RadioKeysFragment();
+        // On config-change restore, the FragmentManager already brought our fragments
+        // back and their state. Adopt those instances instead of creating fresh
+        // (empty) ones — otherwise navigating away from a restored tab loses the
+        // saved state on the very next replace().
+        androidx.fragment.app.FragmentManager fm = getSupportFragmentManager();
+        connectFragment   = (ConnectFragment)   fm.findFragmentByTag(TAG_CONNECT);
+        keyloadFragment   = (KeyloadFragment)   fm.findFragmentByTag(TAG_KEYLOAD);
+        containerFragment = (ContainerFragment) fm.findFragmentByTag(TAG_CONTAINER);
+        radioKeysFragment = (RadioKeysFragment) fm.findFragmentByTag(TAG_RADIO_KEYS);
+        if (connectFragment   == null) connectFragment   = new ConnectFragment();
+        if (keyloadFragment   == null) keyloadFragment   = new KeyloadFragment();
+        if (containerFragment == null) containerFragment = new ContainerFragment();
+        if (radioKeysFragment == null) radioKeysFragment = new RadioKeysFragment();
 
         usbRndisManager = new UsbRndisManager(this);
         usbRndisManager.setListener(rndisListener);
@@ -172,14 +188,14 @@ public class MainActivity extends AppCompatActivity {
             usbRndisManager.requestPermissionAndOpen(preAttached);
         }
 
-        if (savedInstanceState == null) showFragment(connectFragment);
+        if (savedInstanceState == null) showFragment(connectFragment, TAG_CONNECT);
 
         binding.bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-            if      (id == R.id.nav_connect)    showFragment(connectFragment);
-            else if (id == R.id.nav_keyload)    showFragment(keyloadFragment);
-            else if (id == R.id.nav_container)  showFragment(containerFragment);
-            else if (id == R.id.nav_radio_keys) showFragment(radioKeysFragment);
+            if      (id == R.id.nav_connect)    showFragment(connectFragment,   TAG_CONNECT);
+            else if (id == R.id.nav_keyload)    showFragment(keyloadFragment,   TAG_KEYLOAD);
+            else if (id == R.id.nav_container)  showFragment(containerFragment, TAG_CONTAINER);
+            else if (id == R.id.nav_radio_keys) showFragment(radioKeysFragment, TAG_RADIO_KEYS);
             return true;
         });
 
@@ -198,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
             if (isEkcUri(uri)) {
                 pendingOpenUri = uri;
                 binding.bottomNav.setSelectedItemId(R.id.nav_container);
-                showFragment(containerFragment);
+                showFragment(containerFragment, TAG_CONTAINER);
             }
         } else {
             handleUsbIntent(intent);
@@ -1095,9 +1111,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showFragment(Fragment fragment) {
+    private void showFragment(Fragment fragment, String tag) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
+                .replace(R.id.fragment_container, fragment, tag)
                 .commit();
     }
 

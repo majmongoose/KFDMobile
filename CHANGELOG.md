@@ -7,6 +7,13 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.5.3a] — 2026-07-13
+
+### Fixed
+- Rotating the phone with a key container open no longer closes the container. The open container, its file location, password, and any selected keys survive rotation intact. Also fixes a related issue where the same state could be lost after rotation if you navigated to a different tab and came back.
+
+---
+
 ## [0.5.3] — 2026-07-13
 
 ### New

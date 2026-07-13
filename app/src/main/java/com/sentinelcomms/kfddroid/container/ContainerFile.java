@@ -27,15 +27,43 @@
  */
 package com.sentinelcomms.kfddroid.container;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /** In-memory representation of an open .ekc container file. */
-public class ContainerFile {
+public class ContainerFile implements Parcelable {
     public List<ContainerKey>   keys   = new ArrayList<>();
     public List<ContainerGroup> groups = new ArrayList<>();
     public int nextKeyNumber   = 1;
     public int nextGroupNumber = 1;
+
+    public ContainerFile() {}
+
+    protected ContainerFile(Parcel in) {
+        keys   = in.createTypedArrayList(ContainerKey.CREATOR);
+        groups = in.createTypedArrayList(ContainerGroup.CREATOR);
+        nextKeyNumber   = in.readInt();
+        nextGroupNumber = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(keys);
+        dest.writeTypedList(groups);
+        dest.writeInt(nextKeyNumber);
+        dest.writeInt(nextGroupNumber);
+    }
+
+    @Override
+    public int describeContents() { return 0; }
+
+    public static final Creator<ContainerFile> CREATOR = new Creator<ContainerFile>() {
+        @Override public ContainerFile createFromParcel(Parcel in) { return new ContainerFile(in); }
+        @Override public ContainerFile[] newArray(int size) { return new ContainerFile[size]; }
+    };
 
     public void addKey(ContainerKey key) {
         key.id = nextKeyNumber++;
