@@ -7,6 +7,20 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.5.3] — 2026-07-13
+
+### New
+- Motorola KVL5000 is now supported in the MR Emulator. Previously the KVL5000 would query the app for something the KVL3000+ never asked about, and the app would refuse the query — the KVL5000 then gave up before sending any keys. The app now answers that query the way a factory-fresh Motorola radio does.
+- The MR Emulator session now stays open across the KVL's normal connect/disconnect cycles. Older versions would end the session as soon as the KVL disconnected, which was noisy and could miss follow-up keyloads. Now only the Cancel button in the MR Emulator dialog stops emulation.
+
+### Fixed
+- On the Keyload screen, if you had DES selected with a valid key entered, then switched to another tab and came back, the key was silently truncated and marked invalid. It now survives the tab switch intact.
+- The green "connected" banner on the Connect tab now shows the KFD adapter type (KFDShield / Original KFDTool) instead of the generic USB device name.
+- On the Radio Keys screen, SLN/CKR validation for Erase Key is now inline red under the field as you type, matching the rest of the app. Previously it either did nothing until you tapped a different field or popped up an out-of-place status message.
+- The MR Emulator popup's "Keys received" counter no longer uses an oversized bold font — it now matches the rest of the dialog text.
+
+---
+
 ## [0.5.2] — 2026-07-12
 
 **Important:** This release changes the app's internal identity. You must uninstall any prior version before installing 0.5.2 — Android treats it as a different app.

@@ -57,6 +57,13 @@ import java.util.List;
 public class KeyloadFragment extends Fragment {
 
     private FragmentKeyloadBinding binding;
+    /**
+     * Guards {@link #applyKeyHexMaxLength()} from installing the key-hex LengthFilter
+     * before Android has restored the saved text into the field. Otherwise a filter
+     * sized to the default spinner position (ADP, 10 chars) can truncate a longer
+     * restored key (e.g. DES-OFB, 16 chars) when returning to this tab.
+     */
+    private boolean viewStateRestored = false;
     private AppSettings settings;
     private boolean prevKeyIdHex;
     private boolean prevSlnHex;
@@ -198,7 +205,7 @@ public class KeyloadFragment extends Fragment {
      * Trims any over-length content already in the field.
      */
     private void applyKeyHexMaxLength() {
-        if (binding == null) return;
+        if (binding == null || !viewStateRestored) return;
         int pos = binding.spinnerAlgorithm.getSelectedItemPosition();
         boolean isOther = AlgorithmId.VALUES[pos] == AlgorithmId.OTHER;
         int expectedLen = isOther ? 0 : AlgorithmId.keyLength(resolveAlgId());
@@ -224,6 +231,15 @@ public class KeyloadFragment extends Fragment {
         // so a "wrong length" error from a previous algorithm choice clears.
         validateAll();
         refreshButtons();
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        // Now safe to install the length filter — restored key text is already in the field
+        // and the spinner selection reflects the restored algorithm.
+        viewStateRestored = true;
+        applyKeyHexMaxLength();
     }
 
     @Override

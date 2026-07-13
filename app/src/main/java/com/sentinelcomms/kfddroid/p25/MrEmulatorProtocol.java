@@ -28,6 +28,7 @@
 package com.sentinelcomms.kfddroid.p25;
 
 import com.sentinelcomms.kfddroid.p25.kmm.InventoryResponseListActiveKsetIds;
+import com.sentinelcomms.kfddroid.p25.kmm.InventoryResponseListRsiItems;
 import com.sentinelcomms.kfddroid.p25.kmm.KeyItem;
 import com.sentinelcomms.kfddroid.p25.kmm.KeyStatus;
 import com.sentinelcomms.kfddroid.p25.kmm.KmmFrame;
@@ -36,6 +37,8 @@ import com.sentinelcomms.kfddroid.p25.kmm.ModifyKeyCommand;
 import com.sentinelcomms.kfddroid.p25.kmm.NegativeAcknowledgment;
 import com.sentinelcomms.kfddroid.p25.kmm.RekeyAcknowledgment;
 import com.sentinelcomms.kfddroid.protocol.AdapterProtocol;
+
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,6 +58,7 @@ import java.util.List;
  */
 public class MrEmulatorProtocol {
 
+    private static final String TAG = "MrEmulator";
     private static final int TIMEOUT_STD = 5000; // ms
 
     private static final byte OPCODE_READY_REQ             = (byte) 0xC0;
@@ -65,6 +69,7 @@ public class MrEmulatorProtocol {
     private static final byte OPCODE_DISCONNECT_ACK        = (byte) 0x90;
 
     private static final int INV_TYPE_LIST_ACTIVE_KSET_IDS = 0x02;
+    private static final int INV_TYPE_LIST_RSI_ITEMS       = 0x0B;
 
     private final AdapterProtocol adapter;
     private volatile boolean running;
@@ -95,15 +100,19 @@ public class MrEmulatorProtocol {
      */
     public void run() {
         running = true;
+        Log.i(TAG, "run() start — listening for KFD");
         status("Listening for KFD...");
         while (running) {
             try {
                 waitForKeySignature();
                 if (!running) return;
+                Log.i(TAG, "Key signature (0x00) received; waiting for READY_REQ");
 
                 byte req = adapter.getByte(TIMEOUT_STD);
+                Log.i(TAG, "RX opcode 0x" + hex1(req));
                 if (!running) return;
                 if ((req & 0xFF) != (OPCODE_READY_REQ & 0xFF)) {
+                    Log.w(TAG, "Expected READY_REQ 0xC0, got 0x" + hex1(req) + " — resetting");
                     status("Unexpected byte 0x" + hex1(req) + " (expected READY_REQ 0xC0), resetting...");
                     continue;
                 }
@@ -111,56 +120,94 @@ public class MrEmulatorProtocol {
                 // Announce ourselves as an MR device
                 List<Byte> rsp = new ArrayList<>();
                 rsp.add(OPCODE_READY_GENERAL_MODE_MR);
+                Log.i(TAG, "TX READY_GENERAL_MODE_MR (0xD0)");
                 adapter.sendData(rsp);
                 status("KFD connected.");
                 if (listener != null) listener.onSessionStarted();
 
                 runSession();
 
+                Log.i(TAG, "runSession() returned — restart listen loop");
                 status("Session ended. Listening for KFD...");
                 if (listener != null) listener.onSessionEnded();
 
             } catch (InterruptedException e) {
+                Log.i(TAG, "Interrupted — exiting run()");
                 Thread.currentThread().interrupt();
                 return;
             } catch (IOException e) {
                 if (!running) return;
+                Log.w(TAG, "run() IOException: " + e.getMessage() + " — resetting");
                 status("Error: " + e.getMessage() + " — resetting...");
             }
         }
+        Log.i(TAG, "run() exit (running=false)");
     }
 
     // ── Session loop ──────────────────────────────────────────────────────────
 
     private void runSession() throws IOException, InterruptedException {
         while (running) {
-            byte opcode = adapter.getByte(TIMEOUT_STD);
+            // Wait indefinitely for the next opcode. The KVL can go quiet for many
+            // seconds between sessions; a 5s timeout here surfaced as an alarming
+            // "Timeout waiting for broadcast byte" every cycle. The Cancel button
+            // in the MR Emulator dialog interrupts the thread and unblocks us.
+            byte opcode = adapter.getByte(0);
+            Log.i(TAG, "runSession RX opcode 0x" + hex1(opcode));
             if (!running) return;
 
             if ((opcode & 0xFF) == (OPCODE_KMM & 0xFF)) {
+                Log.i(TAG, "  → KMM frame");
                 handleKmmFrame();
             } else if ((opcode & 0xFF) == (OPCODE_TRANSFER_DONE & 0xFF)) {
-                // Echo TRANSFER_DONE, then wait for DISCONNECT
+                Log.i(TAG, "  → TRANSFER_DONE; echoing");
+                // Echo TRANSFER_DONE. Historically we then required a DISCONNECT
+                // and returned from the session — but the Motorola KVL sometimes
+                // sends TRANSFER_DONE mid-flow without a following DISCONNECT and
+                // continues with more KMM commands. Keep the session running so
+                // the user's Cancel button is the only thing that stops us.
                 List<Byte> td = new ArrayList<>();
                 td.add(OPCODE_TRANSFER_DONE);
                 adapter.sendData(td);
-
-                try {
-                    byte disc = adapter.getByte(TIMEOUT_STD);
-                    if ((disc & 0xFF) == (OPCODE_DISCONNECT & 0xFF)) {
-                        List<Byte> dack = new ArrayList<>();
-                        dack.add(OPCODE_DISCONNECT_ACK);
-                        adapter.sendData(dack);
-                    }
-                } catch (IOException ignored) {
-                    // Timeout waiting for DISCONNECT — session ends anyway
-                }
-                return;
+            } else if ((opcode & 0xFF) == (OPCODE_DISCONNECT & 0xFF)) {
+                Log.i(TAG, "  → DISCONNECT; ACKing but continuing to listen (no return)");
+                List<Byte> dack = new ArrayList<>();
+                dack.add(OPCODE_DISCONNECT_ACK);
+                adapter.sendData(dack);
+                // Deliberately no return — Motorola KVL testing: keep listening
+                // until the user hits the Cancel button in the MR Emulator dialog.
+            } else if ((opcode & 0xFF) == 0x00) {
+                // Key signature for a new session — KVL's typical pattern is a
+                // connectivity probe (READY_REQ → TRANSFER_DONE → DISCONNECT) followed
+                // by another 0x00 that starts the real keyload session. Handle the
+                // READY_REQ handshake inline and stay in the session loop.
+                Log.i(TAG, "  → key signature (0x00) mid-session — restarting handshake");
+                handleReadyRequestHandshake();
             } else {
+                Log.w(TAG, "  → unexpected opcode 0x" + hex1(opcode) + " during session; resetting");
                 status("Unexpected opcode 0x" + hex1(opcode) + " during session, resetting...");
                 return;
             }
         }
+    }
+
+    /**
+     * Read the next byte, expect READY_REQ (0xC0), respond with READY_GENERAL_MODE_MR (0xD0).
+     * Used both for the initial handshake and for a KVL-initiated re-handshake within a session.
+     */
+    private void handleReadyRequestHandshake() throws IOException, InterruptedException {
+        byte req = adapter.getByte(TIMEOUT_STD);
+        Log.i(TAG, "handshake RX opcode 0x" + hex1(req));
+        if ((req & 0xFF) != (OPCODE_READY_REQ & 0xFF)) {
+            Log.w(TAG, "handshake expected READY_REQ 0xC0, got 0x" + hex1(req));
+            status("After 0x00, expected READY_REQ, got 0x" + hex1(req));
+            return;
+        }
+        List<Byte> rsp = new ArrayList<>();
+        rsp.add(OPCODE_READY_GENERAL_MODE_MR);
+        Log.i(TAG, "handshake TX READY_GENERAL_MODE_MR (0xD0)");
+        adapter.sendData(rsp);
+        if (listener != null) listener.onSessionStarted();
     }
 
     // ── KMM handling ──────────────────────────────────────────────────────────
@@ -168,15 +215,25 @@ public class MrEmulatorProtocol {
     private void handleKmmFrame() throws IOException, InterruptedException {
         byte[] kmmBytes = receiveKmmFrame();
         int messageId = kmmBytes[0] & 0xFF;
+        Log.i(TAG, "KMM RX msgId=0x" + String.format("%02X", messageId)
+                + " len=" + kmmBytes.length + " body=" + bytesToHex(kmmBytes));
 
         if (messageId == MessageId.InventoryCommand) {
             // KMM body starts at offset 10 (after header+RSI fields in the frame)
             int invType = kmmBytes.length > 10 ? (kmmBytes[10] & 0xFF) : -1;
             if (invType == INV_TYPE_LIST_ACTIVE_KSET_IDS) {
-                // Return empty keyset list — matches factory Motorola behavior
+                // Return empty keyset list — matches factory Motorola behavior.
                 InventoryResponseListActiveKsetIds resp = new InventoryResponseListActiveKsetIds();
                 sendKmm(new KmmFrame(resp).toBytes());
                 status("Inventory query — responded with empty keyset list.");
+            } else if (invType == INV_TYPE_LIST_RSI_ITEMS) {
+                // KVL5000 sends this before it will keyload. A NACK here makes it give
+                // up. Reply with a single factory-default RSI item (RSI=1, MsgNum=0)
+                // to match Motorola SU behavior.
+                InventoryResponseListRsiItems resp = new InventoryResponseListRsiItems();
+                resp.rsiItems.add(new InventoryResponseListRsiItems.RsiItem(0x000001, 0x0000));
+                sendKmm(new KmmFrame(resp).toBytes());
+                status("RSI inventory query — responded with default RSI item.");
             } else {
                 sendNack(MessageId.InventoryCommand, 0x03);
                 status("Unknown inventory type 0x" + String.format("%02X", invType) + " — NACK sent.");
@@ -190,10 +247,15 @@ public class MrEmulatorProtocol {
                     + ", alg 0x" + String.format("%02X", cmd.algorithmId));
 
             for (KeyItem ki : cmd.keyItems) {
+                Log.i(TAG, "onKeyReceived keyset=" + cmd.keysetId
+                        + " alg=0x" + String.format("%02X", cmd.algorithmId)
+                        + " keyId=" + ki.keyId + " sln=" + ki.sln
+                        + " erase=" + ki.erase + " keyLen=" + (ki.key == null ? 0 : ki.key.length));
                 if (listener != null) {
                     listener.onKeyReceived(cmd.keysetId, cmd.algorithmId, ki.keyId, ki.sln, ki.erase, ki.key);
                 }
             }
+            Log.i(TAG, "TX RekeyAcknowledgment for " + cmd.keyItems.size() + " key(s)");
 
             RekeyAcknowledgment ack = new RekeyAcknowledgment();
             ack.messageIdAcknowledged = MessageId.ModifyKeyCommand;
@@ -310,5 +372,12 @@ public class MrEmulatorProtocol {
 
     private static String hex1(byte b) {
         return String.format("%02X", b & 0xFF);
+    }
+
+    private static String bytesToHex(byte[] b) {
+        if (b == null || b.length == 0) return "(empty)";
+        StringBuilder sb = new StringBuilder(b.length * 3);
+        for (byte v : b) sb.append(String.format("%02X ", v));
+        return sb.toString().trim();
     }
 }

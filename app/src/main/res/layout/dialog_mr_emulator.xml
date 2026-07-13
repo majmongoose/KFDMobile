@@ -16,10 +16,9 @@
         android:id="@+id/tv_mr_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="Keys received: 0"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:textSize="15sp" />
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -1004,6 +1004,9 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         connectFragment.appendLog("Adapter: " + typeName);
                         connectFragment.appendLog("AP version: " + ver);
+                        // Replace the USB descriptor name (e.g. "USB Serial Device") with
+                        // the identified KFD adapter type in the green connection banner.
+                        connectFragment.setDeviceName(typeName);
                         connectFragment.refreshState();
                     });
                 } catch (Exception e) {

@@ -102,6 +102,17 @@ public class RadioKeysFragment extends Fragment {
                 validateEraseSln();
             }
         });
+
+        // Live inline validation while typing — user rarely leaves this field before
+        // tapping Erase Key, so wait-for-blur validation felt like nothing was happening.
+        binding.etEraseSln.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable s) {
+                validateEraseSlnLive();
+                refreshButtons();
+            }
+        });
     }
 
     // ── View Key Info ──────────────────────────────────────────────────────────
@@ -145,18 +156,17 @@ public class RadioKeysFragment extends Fragment {
     // ── Erase Key ─────────────────────────────────────────────────────────────
 
     private void confirmEraseKey() {
+        // Refresh inline error state (turns "Required" red if the field is empty)
+        // and bail; the button should already be disabled in that case.
+        validateEraseSln();
+        if (!isEraseSlnValid()) return;
         int sln;
         try {
             String raw = binding.etEraseSln.getText() != null
                     ? binding.etEraseSln.getText().toString().trim() : "";
             sln = settings.parseSln(raw);
         } catch (NumberFormatException e) {
-            showEraseKeyStatus("Invalid SLN/CKR value.");
-            return;
-        }
-        if (sln < 0 || sln > 65535) {
-            showEraseKeyStatus(settings.slnRangeError());
-            return;
+            return; // isEraseSlnValid should have caught this
         }
 
         final int finalSln = sln;
@@ -260,6 +270,45 @@ public class RadioKeysFragment extends Fragment {
         }
     }
 
+    /**
+     * Live variant used from the text watcher — silent on an empty field so we don't
+     * flash "Required" while the user hasn't typed anything yet. Also drives the
+     * Erase Key button enable state via {@link #refreshButtons}.
+     */
+    private void validateEraseSlnLive() {
+        String raw = binding.etEraseSln.getText() != null
+                ? binding.etEraseSln.getText().toString().trim() : "";
+        if (raw.isEmpty()) {
+            binding.tilEraseSln.setError(null);
+            binding.tilEraseSln.setErrorEnabled(false);
+            return;
+        }
+        try {
+            int v = settings.parseSln(raw);
+            if (v >= 0 && v <= 65535) {
+                binding.tilEraseSln.setError(null);
+                binding.tilEraseSln.setErrorEnabled(false);
+            } else {
+                binding.tilEraseSln.setError(settings.slnRangeError());
+            }
+        } catch (NumberFormatException e) {
+            binding.tilEraseSln.setError(settings.slnInvalidError());
+        }
+    }
+
+    /** Returns true if the SLN field currently holds a value that would pass validation. */
+    private boolean isEraseSlnValid() {
+        String raw = binding.etEraseSln.getText() != null
+                ? binding.etEraseSln.getText().toString().trim() : "";
+        if (raw.isEmpty()) return false;
+        try {
+            int v = settings.parseSln(raw);
+            return v >= 0 && v <= 65535;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     private void applySettings() {
         if (binding == null || settings == null) return;
         binding.tilEraseSln.setHint(settings.slnHint());
@@ -290,7 +339,7 @@ public class RadioKeysFragment extends Fragment {
         if (binding == null) return;
         boolean connected = ((MainActivity) requireActivity()).isConnected();
         binding.btnViewKeyInfo.setEnabled(connected);
-        binding.btnEraseKey.setEnabled(connected);
+        binding.btnEraseKey.setEnabled(connected && isEraseSlnValid());
         binding.btnEraseAllKeys.setEnabled(connected);
     }
 
