@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.sentinelcomms.kfddroid'
+    namespace 'com.sentinelcomms.kfdmobile'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.sentinelcomms.kfddroid"
+        applicationId "com.sentinelcomms.kfdmobile"
         minSdk 26
         targetSdk 34
-        versionCode 18
-        versionName "0.5.3a"
+        versionCode 19
+        versionName "0.6.0"
     }
 
     buildTypes {
@@ -33,7 +33,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "KFDDroid-v${variant.versionName}-${variant.buildType.name}.apk"
+            outputFileName = "KFDMobile-v${variant.versionName}-${variant.buildType.name}.apk"
         }
     }
 }

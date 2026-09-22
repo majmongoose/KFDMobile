@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KFDDroid</string>
+    <string name="app_name">KFDMobile</string>
     <string name="tab_connect">Connect</string>
     <string name="tab_device_info">Device Info</string>
     <string name="tab_keyload">Keyload</string>
@@ -58,7 +58,7 @@
 
     <string name="btn_mr_emulator">MR Emulator</string>
 
-    <string name="perm_usb_prompt">KFDDroid needs permission to communicate with the USB device.</string>
+    <string name="perm_usb_prompt">KFDMobile needs permission to communicate with the USB device.</string>
     <string name="error_no_serial_device">No compatible USB serial device found.</string>
     <string name="error_usb_permission_denied">USB permission denied.</string>
     <string name="error_open_failed">Failed to open serial port.</string>

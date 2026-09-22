@@ -7,6 +7,22 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.6.0] — 2026-09-22
+
+**Important:** The app has been renamed. This release is a fresh installation — existing installs must be uninstalled first before installing 0.6.0.
+
+### New
+- The app is now called **KFDMobile**, both on your home screen and in the Play Store listing.
+- MR Emulator status messages have been simplified. Only three states are shown: waiting for a KFD, connected and receiving keys, and adapter error. The technical protocol chatter that used to scroll through the status line is now only in logs.
+
+### Fixed
+- Opening a stored key in the Add/Edit Key screen no longer silently truncates the key. Previously, any stored key — regardless of algorithm — could be shortened to 10 characters if you opened it to look at it or edit it. Affected AES, DES, and proprietary/unknown algorithms alike.
+- Proprietary or unknown-algorithm keys longer than an AES-256 key can now be entered, generated, and stored without being clipped.
+- The DES-key-truncated-on-tab-switch bug on the Keyload screen has been fully closed. Previous fix worked the first time you left and came back; this one also survives repeated tab switches.
+- The MR Emulator popup no longer auto-closes when the KVL disconnects mid-session. It stays open until you tap Cancel, so a KVL that reconnects to send more keys is handled without you having to reopen the dialog.
+
+---
+
 ## [0.5.3a] — 2026-07-13
 
 ### Fixed

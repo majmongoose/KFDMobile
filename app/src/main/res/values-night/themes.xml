@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.KFDDroid" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.KFDMobile" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/slate_300</item>
         <item name="colorPrimaryVariant">@color/slate_900</item>
         <item name="colorOnPrimary">@color/slate_900</item>
