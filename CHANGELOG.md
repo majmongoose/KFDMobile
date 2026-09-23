@@ -7,6 +7,13 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.6.2] — 2026-09-23
+
+### Fixed
+- On Android 15 and Android 16, the top of the app (the "KFDMobile v0.x.x" bar) was rendering underneath the phone's clock and status icons. The toolbar now sits below the status bar the way it should, and the bottom navigation bar also respects the gesture indicator area.
+
+---
+
 ## [0.6.1] — 2026-09-23
 
 Internal Play Store compliance update.
