@@ -7,6 +7,15 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.6.1] — 2026-09-23
+
+Internal Play Store compliance update.
+
+### Changed
+- The app now targets Android 16 (API level 36) as required by Google Play for new uploads. No user-visible behavior changes.
+
+---
+
 ## [0.6.0] — 2026-09-22
 
 **Important:** The app has been renamed. This release is a fresh installation — existing installs must be uninstalled first before installing 0.6.0.
