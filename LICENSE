@@ -1,0 +1,45 @@
+Copyright 2019-2020 KFDtool, LLC
+Copyright 2021-2023 Natalie Moore
+Copyright 2023 Ilya Smirnov
+Copyright 2026 Charles Bricker (KFDMobile Android port and additions)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+===============================================================================
+
+This project is a derivative work of KFDtool by KFDtool LLC, Natalie Moore,
+and Ilya Smirnov, originally published at:
+
+    https://github.com/omahacommsys/KFDtool
+
+Files ported line-for-line from the KFDtool C# reference retain the original
+KFDtool authors' copyrights in their file headers, and add the KFDMobile
+port copyright. Files authored fresh for KFDMobile (such as the USB RNDIS
+network stack under app/src/main/java/com/sentinelcomms/kfdmobile/usb/rndis)
+carry only the KFDMobile port copyright, since they are not derived from
+KFDtool.
+
+Third-party components used at runtime and their licenses:
+
+- usb-serial-for-android (com.github.mik3y) — MIT License
+- AndroidX libraries — Apache License 2.0
+- Google Material Components for Android — Apache License 2.0
+
+Their license texts are distributed with those libraries and are not
+reproduced here.
