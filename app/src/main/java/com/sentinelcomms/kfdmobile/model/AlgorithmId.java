@@ -42,7 +42,8 @@ public final class AlgorithmId {
     public static final int AES_256    = 0x84;
     public static final int AES_128    = 0x85;
     public static final int DES_XL     = 0x9F;
-    public static final int DVP_XL     = 0xA0;
+    public static final int DVI_XL     = 0xA0;
+    public static final int DVP_XL     = 0xA1;
     public static final int ADP        = 0xAA;
     public static final int ILYA       = 0x69;
 

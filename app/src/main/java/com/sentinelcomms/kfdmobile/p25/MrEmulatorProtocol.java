@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * MR (Mobile Radio) Emulator protocol.
  *
- * The phone acts as a radio — it waits for a KFD to initiate a session, responds to
+ * The phone acts as a radio: it waits for a KFD to initiate a session, responds to
  * the handshake, handles inventory queries and key-load commands, and reports received
  * keys to the UI via {@link Listener}.
  *
@@ -100,51 +100,45 @@ public class MrEmulatorProtocol {
      */
     public void run() {
         running = true;
-        Log.i(TAG, "run() start — listening for KFD");
+        Log.i(TAG, "MR emulator started");
         status("Waiting for KFD…");
         while (running) {
             try {
                 waitForKeySignature();
                 if (!running) return;
-                Log.i(TAG, "Key signature (0x00) received; waiting for READY_REQ");
 
                 byte req = adapter.getByte(TIMEOUT_STD);
-                Log.i(TAG, "RX opcode 0x" + hex1(req));
                 if (!running) return;
                 if ((req & 0xFF) != (OPCODE_READY_REQ & 0xFF)) {
-                    Log.w(TAG, "Expected READY_REQ 0xC0, got 0x" + hex1(req) + " — resetting");
+                    Log.w(TAG, "Expected READY_REQ 0xC0, got 0x" + hex1(req) + "; resetting");
                     continue;
                 }
 
                 // Announce ourselves as an MR device
                 List<Byte> rsp = new ArrayList<>();
                 rsp.add(OPCODE_READY_GENERAL_MODE_MR);
-                Log.i(TAG, "TX READY_GENERAL_MODE_MR (0xD0)");
                 adapter.sendData(rsp);
                 if (listener != null) listener.onSessionStarted();
 
                 runSession();
 
-                Log.i(TAG, "runSession() returned — restart listen loop");
                 if (listener != null) listener.onSessionEnded();
 
             } catch (InterruptedException e) {
-                Log.i(TAG, "Interrupted — exiting run()");
+                Log.i(TAG, "MR emulator stopped");
                 Thread.currentThread().interrupt();
                 return;
             } catch (IOException e) {
                 if (!running) return;
-                Log.w(TAG, "run() IOException: " + e.getMessage() + " — resetting");
-                // Only surface real errors to the user — not the routine per-cycle
-                // timeouts that the KVL's polling produces. Bare "Timeout" strings
-                // from the adapter are noise; anything else is worth reporting.
+                Log.w(TAG, "Session error: " + e.getMessage() + "; resetting");
+                // Only surface real errors to the user, not the routine per-cycle
+                // timeouts that the KVL's polling produces.
                 String msg = e.getMessage();
                 if (msg != null && !msg.toLowerCase().contains("timeout")) {
-                    status("Adapter error — reconnecting…");
+                    status("Adapter error, reconnecting…");
                 }
             }
         }
-        Log.i(TAG, "run() exit (running=false)");
     }
 
     // ── Session loop ──────────────────────────────────────────────────────────
@@ -156,38 +150,28 @@ public class MrEmulatorProtocol {
             // "Timeout waiting for broadcast byte" every cycle. The Cancel button
             // in the MR Emulator dialog interrupts the thread and unblocks us.
             byte opcode = adapter.getByte(0);
-            Log.i(TAG, "runSession RX opcode 0x" + hex1(opcode));
             if (!running) return;
 
             if ((opcode & 0xFF) == (OPCODE_KMM & 0xFF)) {
-                Log.i(TAG, "  → KMM frame");
                 handleKmmFrame();
             } else if ((opcode & 0xFF) == (OPCODE_TRANSFER_DONE & 0xFF)) {
-                Log.i(TAG, "  → TRANSFER_DONE; echoing");
-                // Echo TRANSFER_DONE. Historically we then required a DISCONNECT
-                // and returned from the session — but the Motorola KVL sometimes
-                // sends TRANSFER_DONE mid-flow without a following DISCONNECT and
-                // continues with more KMM commands. Keep the session running so
-                // the user's Cancel button is the only thing that stops us.
+                // Echo TRANSFER_DONE but stay in the session: the KVL may send more
+                // KMM commands afterward. Only the user's Cancel button ends emulation.
                 List<Byte> td = new ArrayList<>();
                 td.add(OPCODE_TRANSFER_DONE);
                 adapter.sendData(td);
             } else if ((opcode & 0xFF) == (OPCODE_DISCONNECT & 0xFF)) {
-                Log.i(TAG, "  → DISCONNECT; ACKing but continuing to listen (no return)");
+                // ACK the disconnect but keep listening; KVLs reconnect between
+                // their probe cycle and the real keyload.
                 List<Byte> dack = new ArrayList<>();
                 dack.add(OPCODE_DISCONNECT_ACK);
                 adapter.sendData(dack);
-                // Deliberately no return — Motorola KVL testing: keep listening
-                // until the user hits the Cancel button in the MR Emulator dialog.
             } else if ((opcode & 0xFF) == 0x00) {
-                // Key signature for a new session — KVL's typical pattern is a
-                // connectivity probe (READY_REQ → TRANSFER_DONE → DISCONNECT) followed
-                // by another 0x00 that starts the real keyload session. Handle the
-                // READY_REQ handshake inline and stay in the session loop.
-                Log.i(TAG, "  → key signature (0x00) mid-session — restarting handshake");
+                // Key signature for a new session (KVL probe cycle, then the real
+                // keyload). Handle the READY_REQ handshake inline.
                 handleReadyRequestHandshake();
             } else {
-                Log.w(TAG, "  → unexpected opcode 0x" + hex1(opcode) + " during session; resetting");
+                Log.w(TAG, "Unexpected opcode 0x" + hex1(opcode) + " during session; resetting");
                 return;
             }
         }
@@ -199,14 +183,12 @@ public class MrEmulatorProtocol {
      */
     private void handleReadyRequestHandshake() throws IOException, InterruptedException {
         byte req = adapter.getByte(TIMEOUT_STD);
-        Log.i(TAG, "handshake RX opcode 0x" + hex1(req));
         if ((req & 0xFF) != (OPCODE_READY_REQ & 0xFF)) {
-            Log.w(TAG, "handshake expected READY_REQ 0xC0, got 0x" + hex1(req));
+            Log.w(TAG, "Handshake expected READY_REQ 0xC0, got 0x" + hex1(req));
             return;
         }
         List<Byte> rsp = new ArrayList<>();
         rsp.add(OPCODE_READY_GENERAL_MODE_MR);
-        Log.i(TAG, "handshake TX READY_GENERAL_MODE_MR (0xD0)");
         adapter.sendData(rsp);
         if (listener != null) listener.onSessionStarted();
     }
@@ -216,14 +198,12 @@ public class MrEmulatorProtocol {
     private void handleKmmFrame() throws IOException, InterruptedException {
         byte[] kmmBytes = receiveKmmFrame();
         int messageId = kmmBytes[0] & 0xFF;
-        Log.i(TAG, "KMM RX msgId=0x" + String.format("%02X", messageId)
-                + " len=" + kmmBytes.length + " body=" + bytesToHex(kmmBytes));
 
         if (messageId == MessageId.InventoryCommand) {
             // KMM body starts at offset 10 (after header+RSI fields in the frame)
             int invType = kmmBytes.length > 10 ? (kmmBytes[10] & 0xFF) : -1;
             if (invType == INV_TYPE_LIST_ACTIVE_KSET_IDS) {
-                // Return empty keyset list — matches factory Motorola behavior.
+                // Return empty keyset list, matching factory Motorola behavior.
                 InventoryResponseListActiveKsetIds resp = new InventoryResponseListActiveKsetIds();
                 sendKmm(new KmmFrame(resp).toBytes());
             } else if (invType == INV_TYPE_LIST_RSI_ITEMS) {
@@ -235,25 +215,21 @@ public class MrEmulatorProtocol {
                 sendKmm(new KmmFrame(resp).toBytes());
             } else {
                 sendNack(MessageId.InventoryCommand, 0x03);
-                Log.w(TAG, "Unknown inventory type 0x" + String.format("%02X", invType) + " — NACK sent");
+                Log.w(TAG, "Unknown inventory type 0x" + String.format("%02X", invType) + "; NACK sent");
             }
 
         } else if (messageId == MessageId.ModifyKeyCommand) {
             KmmFrame frame = new KmmFrame(false, kmmBytes);
             ModifyKeyCommand cmd = (ModifyKeyCommand) frame.kmmBody;
-            Log.i(TAG, "Key load: " + cmd.keyItems.size() + " key(s), keyset " + cmd.keysetId
+            // Summary only: never log key material.
+            Log.i(TAG, "Received " + cmd.keyItems.size() + " key(s), keyset " + cmd.keysetId
                     + ", alg 0x" + String.format("%02X", cmd.algorithmId));
 
             for (KeyItem ki : cmd.keyItems) {
-                Log.i(TAG, "onKeyReceived keyset=" + cmd.keysetId
-                        + " alg=0x" + String.format("%02X", cmd.algorithmId)
-                        + " keyId=" + ki.keyId + " sln=" + ki.sln
-                        + " erase=" + ki.erase + " keyLen=" + (ki.key == null ? 0 : ki.key.length));
                 if (listener != null) {
                     listener.onKeyReceived(cmd.keysetId, cmd.algorithmId, ki.keyId, ki.sln, ki.erase, ki.key);
                 }
             }
-            Log.i(TAG, "TX RekeyAcknowledgment for " + cmd.keyItems.size() + " key(s)");
 
             RekeyAcknowledgment ack = new RekeyAcknowledgment();
             ack.messageIdAcknowledged = MessageId.ModifyKeyCommand;
@@ -269,7 +245,7 @@ public class MrEmulatorProtocol {
 
         } else {
             sendNack(messageId, 0x03); // InvalidMessageId
-            Log.w(TAG, "Unknown message ID 0x" + String.format("%02X", messageId) + " — NACK sent");
+            Log.w(TAG, "Unknown message ID 0x" + String.format("%02X", messageId) + "; NACK sent");
         }
     }
 
@@ -370,12 +346,5 @@ public class MrEmulatorProtocol {
 
     private static String hex1(byte b) {
         return String.format("%02X", b & 0xFF);
-    }
-
-    private static String bytesToHex(byte[] b) {
-        if (b == null || b.length == 0) return "(empty)";
-        StringBuilder sb = new StringBuilder(b.length * 3);
-        for (byte v : b) sb.append(String.format("%02X ", v));
-        return sb.toString().trim();
     }
 }

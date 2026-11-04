@@ -58,19 +58,6 @@ public class DataLinkIndependentProtocol implements DeviceProtocol {
 
     private Consumer<String> debugListener;
 
-    /**
-     * Radio model classification from the diagnostic command (00 03 00 0F 67).
-     * Motorola APX radios respond with a trailing byte identifying the platform.
-     */
-    public enum RadioModel {
-        /** Response last byte 0x07 — AN/Mackinaw/OMAP: not compatible with software keyload. */
-        MACKINAW_INCOMPATIBLE,
-        /** Response last byte 0x0A — BN/Freon: compatible with software keyload. */
-        FREON_COMPATIBLE,
-        /** Any other response — treat as unknown, do not block. */
-        UNKNOWN
-    }
-
     public DataLinkIndependentProtocol(UdpTransport udp, boolean motVariant) {
         this.udp        = udp;
         this.motVariant = motVariant;
@@ -143,31 +130,6 @@ public class DataLinkIndependentProtocol implements DeviceProtocol {
     /** No-op: UDP is connectionless, no queues to flush. */
     @Override
     public void clearQueues() { }
-
-    // ── Radio model check (Motorola diagnostic) ──────────────────────────────
-
-    /**
-     * Sends the Motorola radio-model diagnostic command and classifies the response
-     * by its last byte. Must be called while a DLI session is active.
-     */
-    /** Last raw response from {@link #checkRadioModel()}; useful for diagnostics. */
-    private byte[] lastModelResponse = new byte[0];
-
-    /** Hex string of the last model-check response (for logging/diagnostics). */
-    public String getLastModelResponseHex() { return toHex(lastModelResponse); }
-
-    public RadioModel checkRadioModel() throws IOException {
-        byte[] cmd = new byte[] {0x00, 0x03, 0x00, 0x0F, 0x67};
-        dbg("DLI TX (model check): " + toHex(cmd));
-        byte[] rsp = udp.txRx(cmd);
-        dbg("DLI RX (model check): " + toHex(rsp));
-        lastModelResponse = rsp;
-        if (rsp.length == 0) return RadioModel.UNKNOWN;
-        byte last = rsp[rsp.length - 1];
-        if (last == 0x07) return RadioModel.MACKINAW_INCOMPATIBLE;
-        if (last == 0x0A) return RadioModel.FREON_COMPATIBLE;
-        return RadioModel.UNKNOWN;
-    }
 
     // ── Standard session helpers ──────────────────────────────────────────────
 
