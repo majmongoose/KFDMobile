@@ -6,6 +6,8 @@ package com.sentinelcomms.kfdmobile.usb.rndis;
 
 import android.util.Log;
 
+import com.sentinelcomms.kfdmobile.BuildConfig;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
@@ -52,7 +54,7 @@ final class DhcpClient {
         int xid = new Random().nextInt();
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             try {
-                Log.d(TAG, "DHCP attempt " + (attempt + 1) + " xid=0x" + Integer.toHexString(xid));
+                if (BuildConfig.DEBUG) Log.d(TAG, "DHCP attempt " + (attempt + 1) + " xid=0x" + Integer.toHexString(xid));
                 sendDiscover(xid);
                 Reply offer = waitForReply(xid, /*wantType*/ 2, ATTEMPT_TIMEOUT_MS);
                 if (offer == null) { xid++; continue; }

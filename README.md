@@ -1,6 +1,6 @@
 # KFDMobile
 
-**Version 0.6.2**. Android port of [KFDtool](https://github.com/omahacommsys/KFDtool/tree/master/sw/control).
+**Version 0.6.4**. Android port of [KFDtool](https://github.com/omahacommsys/KFDtool/tree/master/sw/control).
 
 A P25 Key Fill Device application for Android phones and tablets. Load, erase, and manage encryption keys in P25 subscriber units using a KFD USB adapter (three-wire interface) or a direct network connection to the radio (Data Link Independent). Also emulates a radio so that a KVL can push keys to your phone for saving into an encrypted container.
 

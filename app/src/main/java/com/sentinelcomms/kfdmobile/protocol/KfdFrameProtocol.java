@@ -29,6 +29,7 @@ package com.sentinelcomms.kfdmobile.protocol;
 
 import android.util.Log;
 
+import com.sentinelcomms.kfdmobile.BuildConfig;
 import com.sentinelcomms.kfdmobile.usb.UsbSerialManager;
 
 import java.io.IOException;
@@ -211,7 +212,8 @@ public class KfdFrameProtocol {
             buildFrameKfdShield(data, frame);
         }
         byte[] outData = toByteArray(frame);
-        Log.d(TAG, "TX [" + adapterType + "] " + outData.length + " bytes: " + toHex(outData));
+        // Length only: frames carry key material during keyloads.
+        if (BuildConfig.DEBUG) Log.d(TAG, "TX [" + adapterType + "] " + outData.length + " bytes");
         usbManager.write(outData, 2000);
     }
 
@@ -301,7 +303,7 @@ public class KfdFrameProtocol {
             try {
                 int n = usbManager.read(buf, USB_READ_TIMEOUT_MS);
                 if (n > 0) {
-                    Log.d(TAG, "RX [" + adapterType + "] " + n + " bytes");
+                    if (BuildConfig.DEBUG) Log.d(TAG, "RX [" + adapterType + "] " + n + " bytes");
                     processBytes(buf, n);
                 }
             } catch (IOException e) {
@@ -358,7 +360,7 @@ public class KfdFrameProtocol {
         try {
             List<Byte> unescaped = kfdToolMode ? unescapeKfdTool(raw) : unescapeKfdShield(raw);
             byte[] packet = toByteArray(unescaped);
-            Log.d(TAG, "Packet [" + adapterType + "]: " + toHex(packet));
+            if (BuildConfig.DEBUG) Log.d(TAG, "RX [" + adapterType + "] " + packet.length + " bytes");
             if (packet.length > 0 && packet[0] == BCST_RECEIVE_BYTE) {
                 broadcastQueue.offer(packet);
             } else {
@@ -420,11 +422,5 @@ public class KfdFrameProtocol {
         List<Byte> list = new ArrayList<>(arr.length);
         for (byte b : arr) list.add(b);
         return list;
-    }
-
-    static String toHex(byte[] data) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : data) sb.append(String.format("%02X ", b));
-        return sb.toString().trim();
     }
 }

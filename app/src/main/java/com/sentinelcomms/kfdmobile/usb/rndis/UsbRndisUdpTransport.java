@@ -248,9 +248,4 @@ public class UsbRndisUdpTransport implements UdpTransport {
         for (int i = 0; i < 4; i++) if (a[i] != b[i]) return false;
         return true;
     }
-
-    @Override
-    public void close() {
-        // The transport does not own the UsbRndisManager — MainActivity does.
-    }
 }

@@ -6,6 +6,8 @@ package com.sentinelcomms.kfdmobile.usb.rndis;
 
 import android.util.Log;
 
+import com.sentinelcomms.kfdmobile.BuildConfig;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -164,7 +166,7 @@ public class RndisSession {
                 byte[] resp = Arrays.copyOf(buf, n);
                 int replyType = ByteUtil.getLE32(resp, 0);
                 if (replyType == expectedReplyType) return resp;
-                Log.d(TAG, "skipping unsolicited RNDIS msg type=0x"
+                if (BuildConfig.DEBUG) Log.d(TAG, "Skipping unsolicited RNDIS msg type=0x"
                         + Integer.toHexString(replyType));
                 continue;
             }
@@ -206,7 +208,7 @@ public class RndisSession {
         if (n < 8) return null;
         int type = ByteUtil.getLE32(buf, 0);
         if (type != Rndis.MSG_PACKET) {
-            Log.w(TAG, "Skipping non-packet RNDIS msg type 0x" + Integer.toHexString(type));
+            if (BuildConfig.DEBUG) Log.d(TAG, "Skipping non-packet RNDIS msg type 0x" + Integer.toHexString(type));
             return null;
         }
         int totalLen = ByteUtil.getLE32(buf,  4);

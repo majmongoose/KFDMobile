@@ -39,9 +39,6 @@ public class UsbRndisManager {
 
     /** Motorola Solutions USB VID (used across all APX Series Radios). */
     public static final int APX_VID = 0x0CAD;
-    /** Known APX PIDs. We match by VID only + interface layout; this is informational.
-     *  0x101B = mobile control head, 0x1051 / 0x1052 = portable radios. */
-    public static final int[] KNOWN_APX_PIDS = { 0x101B, 0x1051, 0x1052 };
 
     /** True if the device looks like an APX radio (Motorola VID + RNDIS-shaped interfaces). */
     public static boolean isApxRadio(UsbDevice d) {

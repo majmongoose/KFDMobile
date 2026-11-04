@@ -49,7 +49,6 @@ public class MrEmulatorDialogFragment extends DialogFragment {
 
     private final List<Integer> receivedKeyIds = new ArrayList<>();
     private int keyCount = 0;
-    private boolean sessionDone = false;
 
     public void setKeySink(KeySink sink) {
         this.keySink = sink;
@@ -128,7 +127,6 @@ public class MrEmulatorDialogFragment extends DialogFragment {
     }
 
     private void finishSession() {
-        sessionDone = true;
         ((MainActivity) requireActivity()).stopMrEmulation();
         dismissAllowingStateLoss();
     }

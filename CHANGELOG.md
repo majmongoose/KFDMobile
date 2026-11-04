@@ -7,6 +7,17 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.6.4] - 2026-11-04
+
+### New
+- The app is much smaller: the installed download is roughly 70 percent smaller than before.
+
+### Fixed
+- Keys loaded through a KFD adapter are no longer written to the phone's system log.
+- The app writes far less to the system log in general. Routine connection chatter is only recorded in developer builds; normal builds log only real errors and a few key events.
+
+---
+
 ## [0.6.3] - 2026-11-04
 
 ### Fixed
