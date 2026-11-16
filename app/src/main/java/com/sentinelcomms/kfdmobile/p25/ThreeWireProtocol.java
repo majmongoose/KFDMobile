@@ -29,6 +29,7 @@ package com.sentinelcomms.kfdmobile.p25;
 
 import com.sentinelcomms.kfdmobile.protocol.AdapterProtocol;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,7 +112,7 @@ public class ThreeWireProtocol implements DeviceProtocol {
             dbg("RX: 0xD1 - READY_GENERAL_MODE (KVL)");
             return DeviceType.Kvl;
         } else {
-            throw new IOException("Unexpected opcode in initSession: 0x" + String.format("%02X", rsp));
+            throw new IOException("Unexpected opcode in initSession: 0x" + String.format(Locale.ROOT, "%02X", rsp));
         }
     }
 
@@ -123,10 +124,10 @@ public class ThreeWireProtocol implements DeviceProtocol {
         adapter.sendData(cmd1);
 
         byte rsp1 = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX: 0x%02X%s", rsp1 & 0xFF,
+        dbg(String.format(Locale.ROOT, "RX: 0x%02X%s", rsp1 & 0xFF,
                 rsp1 == OPCODE_TRANSFER_DONE ? " - TRANSFER_DONE" : " - unexpected"));
         if (rsp1 != OPCODE_TRANSFER_DONE)
-            throw new IOException("Expected TRANSFER_DONE, got 0x" + String.format("%02X", rsp1));
+            throw new IOException("Expected TRANSFER_DONE, got 0x" + String.format(Locale.ROOT, "%02X", rsp1));
 
         dbg("TX: DISCONNECT (0x92)");
         List<Byte> cmd2 = new ArrayList<>();
@@ -134,10 +135,10 @@ public class ThreeWireProtocol implements DeviceProtocol {
         adapter.sendData(cmd2);
 
         byte rsp2 = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX: 0x%02X%s", rsp2 & 0xFF,
+        dbg(String.format(Locale.ROOT, "RX: 0x%02X%s", rsp2 & 0xFF,
                 rsp2 == OPCODE_DISCONNECT_ACK ? " - DISCONNECT_ACK" : " - unexpected"));
         if (rsp2 != OPCODE_DISCONNECT_ACK)
-            throw new IOException("Expected DISCONNECT_ACK, got 0x" + String.format("%02X", rsp2));
+            throw new IOException("Expected DISCONNECT_ACK, got 0x" + String.format(Locale.ROOT, "%02X", rsp2));
     }
 
     /**
@@ -161,8 +162,8 @@ public class ThreeWireProtocol implements DeviceProtocol {
             dbg("RX: 0xC3 - KMM (Motorola MFID, with preamble)");
             lastResponseHadPreamble = true;
         } else {
-            dbg(String.format("RX: 0x%02X - unexpected", rx & 0xFF));
-            throw new IOException("Expected KMM opcode 0xC2/0xC3, got 0x" + String.format("%02X", rx));
+            dbg(String.format(Locale.ROOT, "RX: 0x%02X - unexpected", rx & 0xFF));
+            throw new IOException("Expected KMM opcode 0xC2/0xC3, got 0x" + String.format(Locale.ROOT, "%02X", rx));
         }
 
         byte[] rxKmm = receiveKmmFrame();
@@ -179,7 +180,7 @@ public class ThreeWireProtocol implements DeviceProtocol {
     private static String toHex(byte[] data) {
         if (data == null || data.length == 0) return "(empty)";
         StringBuilder sb = new StringBuilder();
-        for (byte b : data) sb.append(String.format("%02X ", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X ", b));
         return sb.toString().trim();
     }
 
@@ -210,22 +211,22 @@ public class ThreeWireProtocol implements DeviceProtocol {
     private byte[] receiveKmmFrame() throws IOException, InterruptedException {
         dbg("Waiting for length hi...");
         byte hi = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX length hi: 0x%02X", hi & 0xFF));
+        dbg(String.format(Locale.ROOT, "RX length hi: 0x%02X", hi & 0xFF));
         byte lo = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX length lo: 0x%02X", lo & 0xFF));
+        dbg(String.format(Locale.ROOT, "RX length lo: 0x%02X", lo & 0xFF));
         int length = ((hi & 0xFF) << 8) | (lo & 0xFF);
         dbg("Frame body length field: " + length);
 
         List<Byte> toCrc = new ArrayList<>();
 
         byte ctrl = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX ctrl: 0x%02X", ctrl & 0xFF));
+        dbg(String.format(Locale.ROOT, "RX ctrl: 0x%02X", ctrl & 0xFF));
         toCrc.add(ctrl);
 
         byte rsi0 = adapter.getByte(TIMEOUT_STD);
         byte rsi1 = adapter.getByte(TIMEOUT_STD);
         byte rsi2 = adapter.getByte(TIMEOUT_STD);
-        dbg(String.format("RX dest RSI: %02X %02X %02X", rsi0 & 0xFF, rsi1 & 0xFF, rsi2 & 0xFF));
+        dbg(String.format(Locale.ROOT, "RX dest RSI: %02X %02X %02X", rsi0 & 0xFF, rsi1 & 0xFF, rsi2 & 0xFF));
         toCrc.add(rsi0); toCrc.add(rsi1); toCrc.add(rsi2);
 
         int bodyLength = length - 6;
@@ -233,7 +234,7 @@ public class ThreeWireProtocol implements DeviceProtocol {
         List<Byte> kmm = new ArrayList<>();
         for (int i = 0; i < bodyLength; i++) {
             byte b = adapter.getByte(TIMEOUT_STD);
-            dbg(String.format("  KMM[%d/%d]: 0x%02X", i + 1, bodyLength, b & 0xFF));
+            dbg(String.format(Locale.ROOT, "  KMM[%d/%d]: 0x%02X", i + 1, bodyLength, b & 0xFF));
             kmm.add(b);
         }
         toCrc.addAll(kmm);
@@ -245,10 +246,10 @@ public class ThreeWireProtocol implements DeviceProtocol {
         byte crcLo = adapter.getByte(TIMEOUT_STD);
         byte crcHi = adapter.getByte(TIMEOUT_STD);
 
-        dbg(String.format("CRC: expected %02X %02X  received %02X %02X",
+        dbg(String.format(Locale.ROOT, "CRC: expected %02X %02X  received %02X %02X",
                 expectedCrc[0] & 0xFF, expectedCrc[1] & 0xFF, crcLo & 0xFF, crcHi & 0xFF));
         if (expectedCrc[0] != crcLo || expectedCrc[1] != crcHi) {
-            throw new IOException(String.format("CRC mismatch: expected %02X %02X, got %02X %02X",
+            throw new IOException(String.format(Locale.ROOT, "CRC mismatch: expected %02X %02X, got %02X %02X",
                     expectedCrc[0] & 0xFF, expectedCrc[1] & 0xFF, crcLo & 0xFF, crcHi & 0xFF));
         }
 

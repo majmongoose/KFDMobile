@@ -59,6 +59,7 @@ import com.sentinelcomms.kfdmobile.databinding.ItemContainerKeyBinding;
 import com.sentinelcomms.kfdmobile.model.AlgorithmId;
 import com.sentinelcomms.kfdmobile.model.CmdKeyItem;
 
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -663,7 +664,7 @@ public class ContainerFragment extends Fragment {
     private static String bytesToHex(byte[] data) {
         if (data == null) return "";
         StringBuilder sb = new StringBuilder();
-        for (byte b : data) sb.append(String.format("%02X", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X", b));
         return sb.toString();
     }
 
@@ -698,7 +699,7 @@ public class ContainerFragment extends Fragment {
             String keyIdStr  = settings.formatKeyId(key.keyId);
             String slnStr    = settings.formatSln(key.sln);
             holder.b.tvKeyDetails.setText(
-                    String.format("AlgID: %s | KsetID: %d | KeyID: %s | SLN: %s | %s",
+                    String.format(Locale.ROOT, "AlgID: %s | KsetID: %d | KeyID: %s | SLN: %s | %s",
                             algName, key.keysetId, keyIdStr, slnStr, type));
 
             MaterialCardView card = (MaterialCardView) holder.itemView;
@@ -711,7 +712,7 @@ public class ContainerFragment extends Fragment {
                 boolean selected = selectedKeyIds.contains(key.id);
                 card.setStrokeWidth(selected ? dpToPx(3) : 0);
                 card.setStrokeColor(MaterialColors.getColor(card,
-                        com.google.android.material.R.attr.colorPrimary));
+                        androidx.appcompat.R.attr.colorPrimary));
                 card.setClickable(true);
                 card.setLongClickable(false);
                 card.setOnClickListener(v -> toggleSelection(key.id));
@@ -761,7 +762,7 @@ public class ContainerFragment extends Fragment {
                     return sp > 0 ? full.substring(0, sp) : full;
                 }
             }
-            return String.format("0x%02X", algId);
+            return String.format(Locale.ROOT, "0x%02X", algId);
         }
 
         private int dpToPx(int dp) {

@@ -32,6 +32,7 @@ import android.util.Log;
 import com.sentinelcomms.kfdmobile.BuildConfig;
 import com.sentinelcomms.kfdmobile.usb.UsbSerialManager;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -383,7 +384,7 @@ public class KfdFrameProtocol {
                 else if (next == SHIELD_SOM_PLACEHOLDER) out.add(SHIELD_SOM);
                 else if (next == SHIELD_EOM_PLACEHOLDER) out.add(SHIELD_EOM);
                 else throw new IllegalArgumentException(
-                        "Invalid KFDShield ESC sequence: 0x" + String.format("%02X", next));
+                        "Invalid KFDShield ESC sequence: 0x" + String.format(Locale.ROOT, "%02X", next));
             } else {
                 out.add(b);
             }
@@ -402,7 +403,7 @@ public class KfdFrameProtocol {
                 if      (next == TOOL_ESC_PLACEHOLDER)     out.add(TOOL_ESC);
                 else if (next == TOOL_SOM_EOM_PLACEHOLDER) out.add(TOOL_SOM_EOM);
                 else throw new IllegalArgumentException(
-                        "Invalid KFDTool ESC sequence: 0x" + String.format("%02X", next));
+                        "Invalid KFDTool ESC sequence: 0x" + String.format(Locale.ROOT, "%02X", next));
             } else {
                 out.add(b);
             }

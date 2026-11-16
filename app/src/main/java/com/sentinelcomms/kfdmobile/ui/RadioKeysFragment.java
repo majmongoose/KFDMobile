@@ -43,6 +43,7 @@ import com.sentinelcomms.kfdmobile.databinding.FragmentRadioKeysBinding;
 import com.sentinelcomms.kfdmobile.model.CmdKeyItem;
 import com.sentinelcomms.kfdmobile.p25.kmm.KeyInfo;
 
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class RadioKeysFragment extends Fragment {
                         try {
                             int val = AppSettings.parseHexOrDec(raw, prevSlnHex);
                             binding.etEraseSln.setText(nowHex
-                                    ? String.format("0x%04X", val) : String.valueOf(val));
+                                    ? String.format(Locale.ROOT, "0x%04X", val) : String.valueOf(val));
                         } catch (NumberFormatException ignored) {}
                     }
                     prevSlnHex = nowHex;
@@ -143,10 +144,10 @@ public class RadioKeysFragment extends Fragment {
         if (keys.isEmpty()) return "0 key(s) found.";
         StringBuilder sb = new StringBuilder();
         sb.append(keys.size()).append(" key(s) found:\n\n");
-        sb.append(String.format("%-7s %-9s %-7s %-9s\n", "KsetID", "SLN/CKR", "AlgID", "KeyID"));
+        sb.append(String.format(Locale.ROOT, "%-7s %-9s %-7s %-9s\n", "KsetID", "SLN/CKR", "AlgID", "KeyID"));
         sb.append("------- --------- ------- ---------\n");
         for (KeyInfo ki : keys) {
-            sb.append(String.format("%-7d %-9s 0x%02X    %-9s\n",
+            sb.append(String.format(Locale.ROOT, "%-7d %-9s 0x%02X    %-9s\n",
                     ki.keysetId, settings.formatSln(ki.sln), ki.algorithmId,
                     settings.formatKeyId(ki.keyId)));
         }
@@ -246,7 +247,7 @@ public class RadioKeysFragment extends Fragment {
         if (raw.isEmpty()) return;
         try {
             int val = AppSettings.parseHexOrDec(raw, true);
-            et.setText(String.format("0x%04X", val));
+            et.setText(String.format(Locale.ROOT, "0x%04X", val));
         } catch (NumberFormatException ignored) {}
     }
 

@@ -38,6 +38,8 @@ import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
@@ -88,11 +90,8 @@ public class UsbSerialManager {
         this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(permissionReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            context.registerReceiver(permissionReceiver, filter);
-        }
+        ContextCompat.registerReceiver(context, permissionReceiver, filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     public void setListener(ConnectionListener listener) {

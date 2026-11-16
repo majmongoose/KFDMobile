@@ -18,6 +18,8 @@ import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import java.io.IOException;
 
 /**
@@ -105,11 +107,8 @@ public class UsbRndisManager {
         this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            this.context.registerReceiver(permissionReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            this.context.registerReceiver(permissionReceiver, filter);
-        }
+        ContextCompat.registerReceiver(this.context, permissionReceiver, filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // ACTION_USB_DEVICE_DETACHED is a system broadcast — always allowed.
         this.context.registerReceiver(detachReceiver,

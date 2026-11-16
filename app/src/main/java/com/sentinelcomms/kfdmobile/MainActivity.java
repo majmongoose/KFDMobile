@@ -72,6 +72,7 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.RouteInfo;
 import android.widget.Toast;
+import java.util.Locale;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
@@ -251,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // If we still can't determine the name, allow through — ContainerIO will reject invalid files
         if (name == null) return true;
-        return name.toLowerCase().endsWith(".ekc");
+        return name.toLowerCase(Locale.ROOT).endsWith(".ekc");
     }
 
     /** Called by ContainerFragment on resume to pick up a file opened from outside the app. */
@@ -1119,7 +1120,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static String bytesToHex(byte[] data) {
         StringBuilder sb = new StringBuilder();
-        for (byte b : data) sb.append(String.format("%02X", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X", b));
         return sb.toString();
     }
 }

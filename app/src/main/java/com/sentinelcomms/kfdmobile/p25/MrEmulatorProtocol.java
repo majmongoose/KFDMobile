@@ -40,6 +40,7 @@ import com.sentinelcomms.kfdmobile.protocol.AdapterProtocol;
 
 import android.util.Log;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,7 +135,7 @@ public class MrEmulatorProtocol {
                 // Only surface real errors to the user, not the routine per-cycle
                 // timeouts that the KVL's polling produces.
                 String msg = e.getMessage();
-                if (msg != null && !msg.toLowerCase().contains("timeout")) {
+                if (msg != null && !msg.toLowerCase(Locale.ROOT).contains("timeout")) {
                     status("Adapter error, reconnecting…");
                 }
             }
@@ -215,7 +216,7 @@ public class MrEmulatorProtocol {
                 sendKmm(new KmmFrame(resp).toBytes());
             } else {
                 sendNack(MessageId.InventoryCommand, 0x03);
-                Log.w(TAG, "Unknown inventory type 0x" + String.format("%02X", invType) + "; NACK sent");
+                Log.w(TAG, "Unknown inventory type 0x" + String.format(Locale.ROOT, "%02X", invType) + "; NACK sent");
             }
 
         } else if (messageId == MessageId.ModifyKeyCommand) {
@@ -223,7 +224,7 @@ public class MrEmulatorProtocol {
             ModifyKeyCommand cmd = (ModifyKeyCommand) frame.kmmBody;
             // Summary only: never log key material.
             Log.i(TAG, "Received " + cmd.keyItems.size() + " key(s), keyset " + cmd.keysetId
-                    + ", alg 0x" + String.format("%02X", cmd.algorithmId));
+                    + ", alg 0x" + String.format(Locale.ROOT, "%02X", cmd.algorithmId));
 
             for (KeyItem ki : cmd.keyItems) {
                 if (listener != null) {
@@ -245,7 +246,7 @@ public class MrEmulatorProtocol {
 
         } else {
             sendNack(messageId, 0x03); // InvalidMessageId
-            Log.w(TAG, "Unknown message ID 0x" + String.format("%02X", messageId) + "; NACK sent");
+            Log.w(TAG, "Unknown message ID 0x" + String.format(Locale.ROOT, "%02X", messageId) + "; NACK sent");
         }
     }
 
@@ -284,7 +285,7 @@ public class MrEmulatorProtocol {
         byte crcLo = adapter.getByte(TIMEOUT_STD);
         byte crcHi = adapter.getByte(TIMEOUT_STD);
         if (expectedCrc[0] != crcLo || expectedCrc[1] != crcHi) {
-            throw new IOException(String.format("CRC mismatch: expected %02X %02X, got %02X %02X",
+            throw new IOException(String.format(Locale.ROOT, "CRC mismatch: expected %02X %02X, got %02X %02X",
                     expectedCrc[0] & 0xFF, expectedCrc[1] & 0xFF, crcLo & 0xFF, crcHi & 0xFF));
         }
 
@@ -345,6 +346,6 @@ public class MrEmulatorProtocol {
     }
 
     private static String hex1(byte b) {
-        return String.format("%02X", b & 0xFF);
+        return String.format(Locale.ROOT, "%02X", b & 0xFF);
     }
 }

@@ -28,6 +28,7 @@
 package com.sentinelcomms.kfdmobile.model;
 
 import android.util.SparseArray;
+import java.util.Locale;
 
 /** Maps adapter model ID bytes to human-readable names, mirroring InteractTwiKfdtool.cs. */
 public final class ModelId {
@@ -50,6 +51,6 @@ public final class ModelId {
     /** Returns a string in the form "NAME (0xXX)". */
     public static String format(int id) {
         String name = NAMES.get(id, "UNKNOWN");
-        return name + String.format(" (0x%02X)", id);
+        return name + String.format(Locale.ROOT, " (0x%02X)", id);
     }
 }

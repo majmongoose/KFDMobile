@@ -27,6 +27,7 @@
  */
 package com.sentinelcomms.kfdmobile.p25.kmm;
 
+import java.util.Locale;
 import java.io.IOException;
 
 /**
@@ -151,7 +152,7 @@ public class KmmFrame {
                 b.parse(body);
                 return b;
             }
-            throw new IOException("Unsupported inventory response type: 0x" + String.format("%02X", invType));
+            throw new IOException("Unsupported inventory response type: 0x" + String.format(Locale.ROOT, "%02X", invType));
 
         } else if (messageId == MessageId.SessionControl) {
             if (body.length < 1) throw new IOException("SessionControl body empty");
@@ -165,7 +166,7 @@ public class KmmFrame {
                 b.parse(body);
                 return b;
             }
-            throw new IOException("Unknown SessionControl version: 0x" + String.format("%02X", version));
+            throw new IOException("Unknown SessionControl version: 0x" + String.format(Locale.ROOT, "%02X", version));
 
         } else if (messageId == MessageId.ZeroizeResponse) {
             ZeroizeResponse b = new ZeroizeResponse();
@@ -187,6 +188,6 @@ public class KmmFrame {
             b.parse(body);
             return b;
         }
-        throw new IOException("Unknown KMM message ID: 0x" + String.format("%02X", messageId));
+        throw new IOException("Unknown KMM message ID: 0x" + String.format(Locale.ROOT, "%02X", messageId));
     }
 }

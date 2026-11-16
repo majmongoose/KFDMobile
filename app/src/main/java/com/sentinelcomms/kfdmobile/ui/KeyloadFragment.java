@@ -38,6 +38,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import java.util.Locale;
 import java.security.SecureRandom;
 
 import androidx.annotation.NonNull;
@@ -96,7 +97,7 @@ public class KeyloadFragment extends Fragment {
         if (raw.isEmpty()) return;
         try {
             int val = AppSettings.parseHexOrDec(raw, wasHex);
-            et.setText(isHex ? String.format("0x%04X", val) : String.valueOf(val));
+            et.setText(isHex ? String.format(Locale.ROOT, "0x%04X", val) : String.valueOf(val));
         } catch (NumberFormatException ignored) {}
     }
 
@@ -304,7 +305,7 @@ public class KeyloadFragment extends Fragment {
         int expectedLen = AlgorithmId.keyLength(algId);
         if (!isOther && expectedLen > 0 && keyBytes.length != expectedLen) {
             Toast.makeText(requireContext(),
-                    String.format("Key must be %d bytes (%d hex chars) for this algorithm",
+                    String.format(Locale.ROOT, "Key must be %d bytes (%d hex chars) for this algorithm",
                             expectedLen, expectedLen * 2),
                     Toast.LENGTH_LONG).show();
             return;
@@ -367,7 +368,7 @@ public class KeyloadFragment extends Fragment {
 
     private static String bytesToHex(byte[] data) {
         StringBuilder sb = new StringBuilder(data.length * 2);
-        for (byte b : data) sb.append(String.format("%02X", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X", b));
         return sb.toString();
     }
 
@@ -416,7 +417,7 @@ public class KeyloadFragment extends Fragment {
         if (raw.isEmpty()) return;
         try {
             int val = AppSettings.parseHexOrDec(raw, true);
-            et.setText(String.format("0x%04X", val));
+            et.setText(String.format(Locale.ROOT, "0x%04X", val));
         } catch (NumberFormatException ignored) {}
     }
 
@@ -499,7 +500,7 @@ public class KeyloadFragment extends Fragment {
         boolean isOther = AlgorithmId.VALUES[binding.spinnerAlgorithm.getSelectedItemPosition()] == AlgorithmId.OTHER;
         int expectedLen = AlgorithmId.keyLength(algId);
         if (!isOther && expectedLen > 0 && hex.length() / 2 != expectedLen) {
-            setError(binding.tilKeyHex, String.format("Expected %d bytes (%d hex chars) for this algorithm",
+            setError(binding.tilKeyHex, String.format(Locale.ROOT, "Expected %d bytes (%d hex chars) for this algorithm",
                     expectedLen, expectedLen * 2));
             return;
         }
@@ -543,7 +544,7 @@ public class KeyloadFragment extends Fragment {
 
         if (hex.length() > expectedChars) {
             setError(binding.tilKeyHex,
-                    String.format("Too long — expected %d hex chars for this algorithm", expectedChars));
+                    String.format(Locale.ROOT, "Too long — expected %d hex chars for this algorithm", expectedChars));
             return;
         }
         // At exactly the expected length for a DES algorithm, check parity live so

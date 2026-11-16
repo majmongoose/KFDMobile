@@ -7,6 +7,17 @@ by KFDtool LLC, Natalie Moore, and Ilya Smirnov, licensed under the MIT License.
 
 ---
 
+## [0.6.5] - 2026-11-16
+
+### New
+- Updated the app's Android support libraries to their current versions.
+
+### Fixed
+- KFDMobile no longer shows up in the "Open with" list for every file on your phone. It now only offers to open key container (.ekc) files, plus unnamed attachments from email and messaging apps.
+- Numbers and hex values now display the same way regardless of the phone's language setting.
+
+---
+
 ## [0.6.4] - 2026-11-04
 
 ### New

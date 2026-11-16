@@ -38,6 +38,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.util.Locale;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -302,7 +303,7 @@ public final class ContainerIO {
             addText(doc, ki, "KeyTypeKek",   boolStr(ck.keyTypeKek));
             addText(doc, ki, "KeyId",        String.valueOf(ck.keyId));
             addText(doc, ki, "AlgorithmId",  String.valueOf(ck.algorithmId));
-            addText(doc, ki, "Key",          ck.keyHex != null ? ck.keyHex.toUpperCase() : "");
+            addText(doc, ki, "Key",          ck.keyHex != null ? ck.keyHex.toUpperCase(Locale.ROOT) : "");
         }
 
         addText(doc, root, "NextKeyNumber", String.valueOf(file.nextKeyNumber));
@@ -428,7 +429,7 @@ public final class ContainerIO {
     }
 
     public static byte[] hexToBytes(String hex) {
-        hex = hex.trim().replaceAll("\\s+", "").toUpperCase();
+        hex = hex.trim().replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
         if (hex.length() % 2 != 0) throw new IllegalArgumentException("Odd hex length");
         byte[] out = new byte[hex.length() / 2];
         for (int i = 0; i < out.length; i++) {
@@ -440,7 +441,7 @@ public final class ContainerIO {
 
     static String bytesToHex(byte[] data) {
         StringBuilder sb = new StringBuilder(data.length * 2);
-        for (byte b : data) sb.append(String.format("%02X", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X", b));
         return sb.toString();
     }
 

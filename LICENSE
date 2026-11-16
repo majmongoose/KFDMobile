@@ -37,9 +37,9 @@ KFDtool.
 
 Third-party components used at runtime and their licenses:
 
-- usb-serial-for-android (com.github.mik3y) — MIT License
-- AndroidX libraries — Apache License 2.0
-- Google Material Components for Android — Apache License 2.0
+- usb-serial-for-android (com.github.mik3y): MIT License
+- AndroidX libraries: Apache License 2.0
+- Google Material Components for Android: Apache License 2.0
 
 Their license texts are distributed with those libraries and are not
 reproduced here.

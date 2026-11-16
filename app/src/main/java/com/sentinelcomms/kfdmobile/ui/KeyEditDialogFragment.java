@@ -41,6 +41,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.Locale;
 import java.security.SecureRandom;
 
 import com.sentinelcomms.kfdmobile.AppSettings;
@@ -198,7 +199,7 @@ public class KeyEditDialogFragment extends DialogFragment {
             if (!found) {
                 // Select "Other" and pre-fill the hex field
                 binding.spinnerAlgorithm.setSelection(AlgorithmId.VALUES.length - 1);
-                binding.etOtherAlgId.setText(String.format("%02X", existing.algorithmId));
+                binding.etOtherAlgId.setText(String.format(Locale.ROOT, "%02X", existing.algorithmId));
             }
             installKeyHexFilterFor(existing.algorithmId, !found);
             binding.etKeyHex.setText(existing.keyHex);
@@ -289,7 +290,7 @@ public class KeyEditDialogFragment extends DialogFragment {
 
     private ContainerKey buildKey() {
         String name   = text(binding.etName);
-        String keyHex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase();
+        String keyHex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
         int algId     = resolveAlgId();
 
         if (algId < 0) {
@@ -336,7 +337,7 @@ public class KeyEditDialogFragment extends DialogFragment {
         int expectedLen = AlgorithmId.keyLength(algId);
         if (!isOther && expectedLen > 0 && keyHex.length() / 2 != expectedLen) {
             Toast.makeText(requireContext(),
-                    String.format("Expected %d bytes (%d hex chars) for this algorithm",
+                    String.format(Locale.ROOT, "Expected %d bytes (%d hex chars) for this algorithm",
                             expectedLen, expectedLen * 2), Toast.LENGTH_LONG).show();
             return null;
         }
@@ -387,7 +388,7 @@ public class KeyEditDialogFragment extends DialogFragment {
         if (raw.isEmpty()) return;
         try {
             int val = AppSettings.parseHexOrDec(raw, true);
-            et.setText(String.format("0x%04X", val));
+            et.setText(String.format(Locale.ROOT, "0x%04X", val));
         } catch (NumberFormatException ignored) {}
     }
 
@@ -453,7 +454,7 @@ public class KeyEditDialogFragment extends DialogFragment {
 
     private void validateKeyHex() {
         if (binding == null) return;
-        String hex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase();
+        String hex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
         if (hex.isEmpty()) { setError(binding.tilKeyHex, null); return; }
         if (hex.length() % 2 != 0) {
             setError(binding.tilKeyHex, "Must have an even number of hex characters");
@@ -467,7 +468,7 @@ public class KeyEditDialogFragment extends DialogFragment {
         int algId = resolveAlgId();
         int expectedLen = AlgorithmId.keyLength(algId);
         if (!isOther && expectedLen > 0 && hex.length() / 2 != expectedLen) {
-            setError(binding.tilKeyHex, String.format("Expected %d bytes (%d hex chars) for this algorithm",
+            setError(binding.tilKeyHex, String.format(Locale.ROOT, "Expected %d bytes (%d hex chars) for this algorithm",
                     expectedLen, expectedLen * 2));
             return;
         }
@@ -488,7 +489,7 @@ public class KeyEditDialogFragment extends DialogFragment {
      */
     private void validateKeyHexLive() {
         if (binding == null) return;
-        String hex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase();
+        String hex = text(binding.etKeyHex).replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
         if (hex.isEmpty()) { setError(binding.tilKeyHex, null); return; }
         if (!hex.matches("[0-9A-F]+")) {
             setError(binding.tilKeyHex, "Invalid hex characters");
@@ -501,7 +502,7 @@ public class KeyEditDialogFragment extends DialogFragment {
         int expectedChars = expectedLen * 2;
         if (hex.length() > expectedChars) {
             setError(binding.tilKeyHex,
-                    String.format("Too long — expected %d hex chars for this algorithm", expectedChars));
+                    String.format(Locale.ROOT, "Too long — expected %d hex chars for this algorithm", expectedChars));
             return;
         }
         // At exactly the expected length for a DES algorithm, check parity live.
@@ -532,7 +533,7 @@ public class KeyEditDialogFragment extends DialogFragment {
 
     private static String bytesToHex(byte[] data) {
         StringBuilder sb = new StringBuilder(data.length * 2);
-        for (byte b : data) sb.append(String.format("%02X", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X", b));
         return sb.toString();
     }
 

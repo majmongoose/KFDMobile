@@ -33,6 +33,7 @@ import com.sentinelcomms.kfdmobile.p25.kmm.Mfid90SessionControlVer1;
 import com.sentinelcomms.kfdmobile.p25.kmm.SessionControl;
 import com.sentinelcomms.kfdmobile.protocol.UdpTransport;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.function.Consumer;
 
@@ -76,7 +77,7 @@ public class DataLinkIndependentProtocol implements DeviceProtocol {
     private static String toHex(byte[] data) {
         if (data == null || data.length == 0) return "(empty)";
         StringBuilder sb = new StringBuilder();
-        for (byte b : data) sb.append(String.format("%02X ", b));
+        for (byte b : data) sb.append(String.format(Locale.ROOT, "%02X ", b));
         return sb.toString().trim();
     }
 

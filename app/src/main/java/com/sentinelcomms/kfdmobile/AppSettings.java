@@ -30,6 +30,7 @@ package com.sentinelcomms.kfdmobile;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.InputType;
+import java.util.Locale;
 
 /** Centralizes display/parse settings for Key ID and SLN/CKR number formats. */
 public class AppSettings {
@@ -57,8 +58,8 @@ public class AppSettings {
 
     // ── Display formatters ────────────────────────────────────────────────────
 
-    public String formatKeyId(int id)  { return isKeyIdHex() ? String.format("0x%04X", id) : String.valueOf(id); }
-    public String formatSln(int sln)   { return isSlnHex()   ? String.format("0x%04X", sln) : String.valueOf(sln); }
+    public String formatKeyId(int id)  { return isKeyIdHex() ? String.format(Locale.ROOT, "0x%04X", id) : String.valueOf(id); }
+    public String formatSln(int sln)   { return isSlnHex()   ? String.format(Locale.ROOT, "0x%04X", sln) : String.valueOf(sln); }
 
     // ── Field hints ───────────────────────────────────────────────────────────
 

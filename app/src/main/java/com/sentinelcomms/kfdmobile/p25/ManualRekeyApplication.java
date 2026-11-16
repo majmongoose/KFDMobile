@@ -45,6 +45,7 @@ import com.sentinelcomms.kfdmobile.p25.kmm.ZeroizeResponse;
 import com.sentinelcomms.kfdmobile.protocol.AdapterProtocol;
 import com.sentinelcomms.kfdmobile.protocol.UdpTransport;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -174,7 +175,7 @@ public class ManualRekeyApplication {
                 cmd.algorithmId = first.algorithmId;
 
                 for (CmdKeyItem item : group) {
-                    status(String.format("  Key — AlgID: 0x%02X, KsetID: %d, KeyID: %d, SLN: %d",
+                    status(String.format(Locale.ROOT, "  Key — AlgID: 0x%02X, KsetID: %d, KeyID: %d, SLN: %d",
                             item.algorithmId, item.keysetId, item.keyId, item.sln));
                     KeyItem ki = new KeyItem();
                     ki.erase = false;
@@ -185,7 +186,7 @@ public class ManualRekeyApplication {
                     cmd.keyItems.add(ki);
                 }
 
-                status(String.format("Sending ModifyKeyCommand (%d key(s), AlgID 0x%02X, KsetID %d)…",
+                status(String.format(Locale.ROOT, "Sending ModifyKeyCommand (%d key(s), AlgID 0x%02X, KsetID %d)…",
                         group.size(), first.algorithmId, first.keysetId));
 
                 KmmBody rsp = txRxKmm(cmd);
@@ -249,7 +250,7 @@ public class ManualRekeyApplication {
             cmd.algorithmId = 0x81; // to match KVL3000+ R3.53.03 behavior
 
             for (CmdKeyItem item : keyItems) {
-                status(String.format("  Erase — SLN: %d", item.sln));
+                status(String.format(Locale.ROOT, "  Erase — SLN: %d", item.sln));
                 KeyItem ki = new KeyItem();
                 ki.erase = true;
                 ki.kek   = false;
@@ -260,7 +261,7 @@ public class ManualRekeyApplication {
                 cmd.keyItems.add(ki);
             }
 
-            status(String.format("Sending erase command (%d key(s))…", keyItems.size()));
+            status(String.format(Locale.ROOT, "Sending erase command (%d key(s))…", keyItems.size()));
             KmmBody rsp2 = txRxKmm(cmd);
 
             if (rsp2 instanceof RekeyAcknowledgment) {

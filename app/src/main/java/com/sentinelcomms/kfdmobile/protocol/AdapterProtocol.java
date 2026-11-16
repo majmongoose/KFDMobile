@@ -27,6 +27,7 @@
  */
 package com.sentinelcomms.kfdmobile.protocol;
 
+import java.util.Locale;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -293,7 +294,7 @@ public class AdapterProtocol {
     public byte getByte(int timeoutMs) throws IOException, InterruptedException {
         List<Byte> rsp = lower.readBroadcast(timeoutMs == 0 ? Integer.MAX_VALUE : timeoutMs);
         if (rsp.size() != 3) throw new IOException("GetByte: invalid broadcast length " + rsp.size());
-        if (rsp.get(0) != BCST_RECEIVE_BYTE) throw new IOException("GetByte: unexpected opcode 0x" + String.format("%02X", rsp.get(0)));
+        if (rsp.get(0) != BCST_RECEIVE_BYTE) throw new IOException("GetByte: unexpected opcode 0x" + String.format(Locale.ROOT, "%02X", rsp.get(0)));
         return rsp.get(2);
     }
 

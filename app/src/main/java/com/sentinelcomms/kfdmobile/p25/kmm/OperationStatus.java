@@ -27,6 +27,8 @@
  */
 package com.sentinelcomms.kfdmobile.p25.kmm;
 
+import java.util.Locale;
+
 public final class OperationStatus {
     public static final int CommandWasPerformed        = 0x00;
     public static final int InvalidMessageId           = 0x01;
@@ -57,7 +59,7 @@ public final class OperationStatus {
             case InvalidSln:          return "Invalid SLN";
             case InvalidKeyLength:    return "Invalid key length";
             case CommandWasNotPerformed: return "Command was not performed";
-            default: return String.format("Unknown (0x%02X)", status);
+            default: return String.format(Locale.ROOT, "Unknown (0x%02X)", status);
         }
     }
 }

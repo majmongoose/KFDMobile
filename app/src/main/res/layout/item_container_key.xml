@@ -47,7 +47,7 @@
             android:src="@drawable/ic_edit"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Edit key"
-            android:tint="?attr/colorControlNormal" />
+            app:tint="?attr/colorControlNormal" />
 
         <ImageButton
             android:id="@+id/btn_delete_key"
@@ -56,7 +56,7 @@
             android:src="@drawable/ic_delete"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Delete key"
-            android:tint="?attr/colorControlNormal" />
+            app:tint="?attr/colorControlNormal" />
 
     </LinearLayout>
 
