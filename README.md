@@ -140,7 +140,7 @@ The MR Emulator lets a Key Variable Loader push keys directly into KFDMobile so 
 Clone the repository:
 
 ```
-git clone https://github.com/majmongoose/KFDDroid.git
+git clone https://github.com/majmongoose/KFDMobile.git
 ```
 
 Open the project in Android Studio, or build a debug APK from the command line:

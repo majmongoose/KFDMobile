@@ -14,8 +14,25 @@ android {
         versionName "0.6.4"
     }
 
+    // Upload-key signing. Values come from ~/.gradle/gradle.properties (outside the
+    // repo) so the keystore path and passwords are never committed. If they are
+    // absent, release builds are produced unsigned.
+    def hasUploadKey = ['KFDMOBILE_KEYSTORE', 'KFDMOBILE_STORE_PASSWORD',
+                        'KFDMOBILE_KEY_ALIAS', 'KFDMOBILE_KEY_PASSWORD'].every { project.hasProperty(it) }
+    signingConfigs {
+        release {
+            if (hasUploadKey) {
+                storeFile     file(project.property('KFDMOBILE_KEYSTORE'))
+                storePassword project.property('KFDMOBILE_STORE_PASSWORD')
+                keyAlias      project.property('KFDMOBILE_KEY_ALIAS')
+                keyPassword   project.property('KFDMOBILE_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasUploadKey) signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
