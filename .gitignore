@@ -1,5 +1,6 @@
-# Gradle build outputs
+# Gradle build outputs and wrapper
 .gradle/
+gradle/
 build/
 app/build/
 
