@@ -135,26 +135,6 @@ The MR Emulator lets a Key Variable Loader push keys directly into KFDMobile so 
 
 ---
 
-## Building
-
-Clone the repository:
-
-```
-git clone https://github.com/majmongoose/KFDMobile.git
-```
-
-Open the project in Android Studio, or build a debug APK from the command line:
-
-```
-./gradlew assembleDebug
-```
-
-The APK is written to `app/build/outputs/apk/debug/KFDMobile-v<version>-debug.apk`. Transfer it to your Android device and install it (you will need to allow installation from an unknown source in Android settings).
-
-Package name: `com.sentinelcomms.kfdmobile`.
-
----
-
 ## License
 
 KFDMobile is licensed under the MIT License. See the [LICENSE](LICENSE) file for the full text.
