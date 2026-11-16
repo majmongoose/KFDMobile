@@ -7,6 +7,10 @@
 
 A P25 Key Fill Device application for Android phones and tablets. Load, erase, and manage encryption keys in P25 subscriber units using a KFD USB adapter (three-wire interface) or a direct network connection to the radio (Data Link Independent). Also emulates a radio so that a KVL can push keys to your phone for saving into an encrypted container.
 
+## Get it on Google Play
+
+KFDMobile is available on [Google Play](https://play.google.com/store/apps/details?id=com.sentinelcomms.kfdmobile) for a one-time price of $5; it will never be a subscription. The purchase price supports the developer, and the source code will always remain free and open source under the MIT License.
+
 ---
 
 ## Requirements
